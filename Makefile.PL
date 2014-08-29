@@ -12,10 +12,14 @@ WriteMakefile(
     LICENSE          => 'perl',
     MIN_PERL_VERSION => '5.10.1',
     PREREQ_PM => {
-        'Moo'           => 1.006,
-        'Carp'          => 0, # Carp was first released with perl 5
-        'OAuth::Simple' => 1.01,
-        'Throwable'     => 0.200011,
+        'Moo'            => 1.006,
+        'Carp'           => 0, # Carp was first released with perl 5
+        'OAuth::Simple'  => 1.01,
+        'Throwable'      => 0.200011,
+        'POSIX'          => 0, # POSIX was first released with perl 5
+        'MIME::Base64'   => 0, # MIME::Base64 was first released with perl v5.7.3
+        'Digest::SHA'    => 0, # Digest::SHA was first released with perl v5.9.3
+        'LWP::UserAgent' => 6.00,
     },
     BUILD_REQUIRES => {
         'Test::Most'      => 0.31,
@@ -23,6 +27,7 @@ WriteMakefile(
         'Test::Exception' => 0.32,
         'FindBin'         => 0, # FindBin was first released with perl 5.00307
         'Mojolicious'     => 5.28,
+        'LWP::Simple'     => 6.00,
     },
     META_MERGE => {
         resources => {
@@ -37,4 +42,4 @@ WriteMakefile(
     },
 );
 
-# vim: ts=4:sw=2:et
+# vim: ts=4:sw=4:et

@@ -65,4 +65,4 @@ is(
 
 done_testing();
 
-# vim: ts=4:sw=2:et
+# vim: ts=4:sw=4:et

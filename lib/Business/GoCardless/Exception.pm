@@ -10,4 +10,4 @@ has error => (
 
 1;
 
-# vim: ts=4:sw=2:et
+# vim: ts=4:sw=4:et

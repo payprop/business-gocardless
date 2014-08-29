@@ -34,4 +34,4 @@ isa_ok( $GoCardless->client,'Business::GoCardless::Client' );
 
 done_testing();
 
-# vim: ts=4:sw=2:et
+# vim: ts=4:sw=4:et

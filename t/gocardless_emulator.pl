@@ -22,7 +22,15 @@ get '/connect/bills/new' => sub {
     my $c_uri  = $c->param( 'cancel_uri' );
     my $state  = $c->param( 'state' );
 
-    $c->redirect_to( $r_uri // 'http://www.google.com' );
+    $c->redirect_to( $r_uri // '/success' );
+};
+
+get '/success' => sub {
+    my ( $c ) = @_;
+    $c->render(
+        text   => 'Success',
+        status => 200,
+    );
 };
 
 sub _bad_request {
@@ -35,4 +43,4 @@ sub _bad_request {
 
 app->start;
 
-# vim: ts=4:sw=2:et
+# vim: ts=4:sw=4:et
