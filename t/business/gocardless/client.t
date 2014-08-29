@@ -25,9 +25,7 @@ can_ok(
         api_path
         app_id
         app_secret
-        oauth_client
         merchant_id
-        authorize_url
         new_bill_url
         new_limit_url
     /,

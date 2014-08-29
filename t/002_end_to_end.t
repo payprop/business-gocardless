@@ -32,19 +32,19 @@ my $GoCardless = Business::GoCardless->new(
 isa_ok( $GoCardless,'Business::GoCardless' );
 
 my $new_url = $GoCardless->client->new_bill_url({
-    amount => 100,
-    name   => 'Example payment',
+    amount       => 100,
+    name         => 'Example payment',
+    redirect_uri => "http://localhost:3000/merchants/$mid/confirm_resource",
 });
 
 note $new_url;
-#note get( $new_url );
 
-#note $GoCardless->client->confirm_resource({
-#    resource_uri  => '',
-#    resource_id   => 1,
-#    response_type => 'bill',
-#    signature     => '',
-#    state         => '',
-#});
+note $GoCardless->client->confirm_resource({
+    resource_uri  => 'https://sandbox.gocardless.com/api/v1/bills/0PRKT94DND',
+    resource_id   => '0PRKT94DND',
+    resource_type => 'bill',
+    signature     => 'f2a3600a7720d3a549a2eef859e1cba070b4f3531f8e45f40adc0786b84b3c73',
+    #state =>
+});
 
 done_testing();

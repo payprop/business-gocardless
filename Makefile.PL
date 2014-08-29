@@ -12,14 +12,15 @@ WriteMakefile(
     LICENSE          => 'perl',
     MIN_PERL_VERSION => '5.10.1',
     PREREQ_PM => {
-        'Moo'            => 1.006,
-        'Carp'           => 0, # Carp was first released with perl 5
-        'OAuth::Simple'  => 1.01,
-        'Throwable'      => 0.200011,
-        'POSIX'          => 0, # POSIX was first released with perl 5
-        'MIME::Base64'   => 0, # MIME::Base64 was first released with perl v5.7.3
-        'Digest::SHA'    => 0, # Digest::SHA was first released with perl v5.9.3
-        'LWP::UserAgent' => 6.00,
+        'Moo'                  => 1.006,
+        'Carp'                 => 0, # Carp was first released with perl 5
+        'OAuth::Simple'        => 1.01,
+        'Throwable'            => 0.200011,
+        'POSIX'                => 0, # POSIX was first released with perl 5
+        'MIME::Base64'         => 0, # MIME::Base64 was first released with perl v5.7.3
+        'Digest::SHA'          => 0, # Digest::SHA was first released with perl v5.9.3
+        'LWP::UserAgent'       => 6.00,
+        'LWP::Protocol::https' => 6.00,
     },
     BUILD_REQUIRES => {
         'Test::Most'      => 0.31,

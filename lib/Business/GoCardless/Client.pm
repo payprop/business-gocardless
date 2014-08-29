@@ -3,9 +3,9 @@ package Business::GoCardless::Client;
 use Moo;
 with 'Business::GoCardless::Utils';
 use Business::GoCardless::Exception;
+use Business::GoCardless::Bill;
 
 use Carp qw/ confess /;
-use OAuth::Simple;
 use POSIX qw/ strftime /;
 use MIME::Base64 qw/ encode_base64 /;
 use LWP::UserAgent;
@@ -43,36 +43,9 @@ has app_secret => (
     }
 );
 
-has oauth_client => (
-    is       => 'ro',
-    lazy     => 1,
-    default  => sub {
-        my ( $self ) = @_;
-
-        return OAuth::Simple->new(
-            app_id     => $self->app_id,
-            secret     => $self->app_secret,
-#           postback   => 'POSTBACK URL',
-        );
-    },
-);
-
 has merchant_id => (
     is       => 'rw',
 );
-
-sub authorize_url {
-    my ( $self ) = @_;
-
-    my $url = $self->oauth_client->authorize({
-        url           => $self->base_url . '/oauth/authorize',
-        client_id     => $self->app_id,
-        response_type => 'code',
-        scope         => 'manage_merchant',
-    });
-    # Your web app redirect method.
-    #$self->redirect($url);
-}
 
 sub new_subscription_url {
     my ( $self,$params ) = @_;
@@ -117,7 +90,7 @@ sub new_limit_url {
 sub confirm_resource {
     my ( $self,$params ) = @_;
 
-    if ( ! $self->signature_valid( $params ) ) {
+    if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
         Business::GoCardless::Exception->throw({
             error => "Invalid signature for confirm_resource"
         });
@@ -125,35 +98,44 @@ sub confirm_resource {
 
     my $data = {
         resource_id   => $params->{resource_id},
-        response_type => $params->{resource_type},
+        resource_type => $params->{resource_type},
     };
 
     my $credentials = encode_base64( $self->app_id . ':' . $self->app_secret );
     $credentials    =~ s/\s//g;
 
-    my $headers = { 'Authorization' => "Basic $credentials" };
-
     my $ua = LWP::UserAgent->new;
     $ua->agent( $self->_user_agent );
 
     my $req = HTTP::Request->new(
-        POST => join( '/',$self->base_url,$self->api_path,'confirm' )
+        POST => join( '/',$self->base_url . $self->api_path,'confirm' )
     );
 
+    $req->header( 'Authorization' => "Basic $credentials" );
+    $req->content_type( 'application/x-www-form-urlencoded' );
+    $req->content( $self->normalize_params( $data ) );
+
+#main::note main::explain $req;
     my $res = $ua->request( $req );
 
-    if ($res->is_success) {
-        print $res->content;
+    if ( $res->is_success ) {
+        
+print $res->content;
+        my $class = "Business::GoCardless::".ucfirst( $params->{resource_type} );
+        return $class->new( id => $params->{resource_id} );
     }
     else {
-        print $res->status_line, "\n";
+print $res->status_line;
+        Business::GoCardless::Exception->throw({
+            error => $res->status_line
+        });
     }
 }
 
 sub _user_agent {
     my ( $self ) = @_;
 
-    return "gocardless-perl/v" . $Business::GoCardless::VERSION;
+    return "business-gocardless/perl/v" . $Business::GoCardless::VERSION;
 }
 
 1;

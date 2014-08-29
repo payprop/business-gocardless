@@ -33,6 +33,33 @@ get '/success' => sub {
     );
 };
 
+get '/merchants/:mid/confirm_resource' => sub {
+    my ( $c ) = @_;
+    foreach ( qw/
+        resource_uri
+        resource_id
+        resource_type
+        signature
+        state
+    / ) {
+        warn "$_ => " . $c->param( $_ )
+            if defined $c->param( $_ );
+    }
+
+    my $mid   = $c->param( 'mid' );
+    my $uri   = $c->param( 'resource_uri' );
+    my $id    = $c->param( 'resource_id' );
+    my $type  = $c->param( 'resource_type' );
+    my $sig   = $c->param( 'signature' );
+    my $state = $c->param( 'state' );
+
+    if ( $state ) {
+        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig&state=$state" );
+    } else {
+        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig" );
+    }
+};
+
 sub _bad_request {
     my ( $c,$text ) = @_;
     $c->render(
