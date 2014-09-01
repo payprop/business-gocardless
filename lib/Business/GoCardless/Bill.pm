@@ -32,7 +32,7 @@ sub source {
 
         $valid_sources->{ ref( $obj ) }
             or Business::GoCardless::Exception->throw({
-                error => "source object must be one of "
+                message => "source object must be one of "
                 . join( ", ", sort keys( %{ $valid_sources } ) )
             });
 
@@ -46,11 +46,6 @@ sub source {
 sub retry  { shift->_operation( 'retry' ); }
 sub cancel { shift->_operation( 'cancel' ); }
 sub refund { shift->_operation( 'refund' ); }
-
-sub _operation {
-    my ( $self,$verb ) = @_;
-    $self->client->api_post( sprintf( $self->endpoint,$self->id ) . "/$verb" );
-}
 
 sub save {
     my ( $self ) = @_;

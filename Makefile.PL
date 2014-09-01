@@ -21,6 +21,7 @@ WriteMakefile(
         'Digest::SHA'          => 0, # Digest::SHA was first released with perl v5.9.3
         'LWP::UserAgent'       => 6.00,
         'LWP::Protocol::https' => 6.00,
+        'JSON'                 => 2.90,
     },
     BUILD_REQUIRES => {
         'Test::Most'      => 0.31,

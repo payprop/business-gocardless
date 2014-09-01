@@ -9,6 +9,7 @@ use Carp qw/ confess /;
 use POSIX qw/ strftime /;
 use MIME::Base64 qw/ encode_base64 /;
 use LWP::UserAgent;
+use JSON;
 
 has token => (
     is       => 'ro',
@@ -92,7 +93,7 @@ sub confirm_resource {
 
     if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
         Business::GoCardless::Exception->throw({
-            error => "Invalid signature for confirm_resource"
+            message => "Invalid signature for confirm_resource"
         });
     }
 
@@ -112,22 +113,25 @@ sub confirm_resource {
     );
 
     $req->header( 'Authorization' => "Basic $credentials" );
+    $req->header( 'Accept' => 'application/json' );
+
     $req->content_type( 'application/x-www-form-urlencoded' );
     $req->content( $self->normalize_params( $data ) );
 
-#main::note main::explain $req;
     my $res = $ua->request( $req );
 
     if ( $res->is_success ) {
         
-print $res->content;
         my $class = "Business::GoCardless::".ucfirst( $params->{resource_type} );
-        return $class->new( id => $params->{resource_id} );
+        my $obj   = $class->new( id => $params->{resource_id} );
+        $obj->find_with_client;
+        return $obj;
     }
     else {
-print $res->status_line;
         Business::GoCardless::Exception->throw({
-            error => $res->status_line
+            message  => $res->content,
+            code     => $res->code,
+            response => $res->status_line,
         });
     }
 }
@@ -135,7 +139,60 @@ print $res->status_line;
 sub _user_agent {
     my ( $self ) = @_;
 
+    # probably want more infoin here, version of perl, platform, and such
     return "business-gocardless/perl/v" . $Business::GoCardless::VERSION;
+}
+
+sub api_get {
+    my ( $self,$path,$params ) = @_;
+    return $self->api_request( 'GET',$path,$params );
+}
+
+sub api_post {
+    my ( $self,$path,$params ) = @_;
+    return $self->api_request( 'POST',$path,$params );
+}
+
+sub api_put {
+    my ( $self,$path,$params ) = @_;
+    return $self->api_request( 'PUT',$path,$params );
+}
+
+sub api_delete {
+    my ( $self,$path,$params ) = @_;
+    return $self->api_request( 'DELETE',$path,$params );
+}
+
+sub api_request {
+    my ( $self,$method,$path,$params ) = @_;
+
+    my $ua = LWP::UserAgent->new;
+    $ua->agent( $self->_user_agent );
+
+    my $req = HTTP::Request->new(
+        $method => join( '/',$self->base_url . $self->api_path . $path ),
+    );
+
+    $req->header( 'Authorization' => "bearer " . $self->token );
+    $req->header( 'Accept' => 'application/json' );
+
+    if ( $method =~ /POST|PUT/ ) {
+      $req->content_type( 'application/x-www-form-urlencoded' );
+      $req->content( $self->normalize_params( $params ) );
+    }
+
+    my $res = $ua->request( $req );
+
+    if ( $res->is_success ) {
+        return JSON->new->decode( $res->content );
+    }
+    else {
+        Business::GoCardless::Exception->throw({
+            message  => $res->content,
+            code     => $res->code,
+            response => $res->status_line,
+        });
+    }
 }
 
 1;

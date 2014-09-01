@@ -26,6 +26,7 @@ can_ok(
         token
         client_details
         client
+        bill
     /,
 );
 

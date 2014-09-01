@@ -11,6 +11,9 @@ use Business::GoCardless;
 
 use FindBin qw/ $Bin /;
 
+plan skip_all => "GOCARDLESS_ENDTOEND required"
+    if ! $ENV{GOCARDLESS_ENDTOEND};
+
 my ( $token,$url,$app_id,$app_secret,$mid ) = @ENV{qw/
     GOCARDLESS_TOKEN
     GOCARDLESS_TEST_URL
@@ -31,6 +34,7 @@ my $GoCardless = Business::GoCardless->new(
 
 isa_ok( $GoCardless,'Business::GoCardless' );
 
+=cut
 my $new_url = $GoCardless->client->new_bill_url({
     amount       => 100,
     name         => 'Example payment',
@@ -39,12 +43,16 @@ my $new_url = $GoCardless->client->new_bill_url({
 
 note $new_url;
 
-note $GoCardless->client->confirm_resource({
-    resource_uri  => 'https://sandbox.gocardless.com/api/v1/bills/0PRKT94DND',
-    resource_id   => '0PRKT94DND',
+note explain $GoCardless->client->confirm_resource({
+    resource_uri  => 'https://sandbox.gocardless.com/api/v1/bills/0PTTCSFZT2',
+    resource_id   => '0PTTCSFZT2',
     resource_type => 'bill',
-    signature     => 'f2a3600a7720d3a549a2eef859e1cba070b4f3531f8e45f40adc0786b84b3c73',
+    signature     => 'a133e63223d8de3ae00d2e2c2710d33a0a89394295f06a02fe30a20c6d8603d0',
     #state =>
 });
+=cut
+
+my $Bill = $GoCardless->bill( '0PTTCSFZT2' );
+note explain $Bill;
 
 done_testing();

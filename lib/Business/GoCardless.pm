@@ -2,9 +2,31 @@ package Business::GoCardless;
 
 $Business::GoCardless::VERSION = '0.01_01';
 
+=head1 NAME
+
+Business::GoCardless
+
+=head1 VERSION
+
+0.01_01
+
+=head1 DESCRIPTION
+
+=head1 SYNOPSIS
+
+=cut
+
 use Moo;
 use Carp qw/ confess /;
+
 use Business::GoCardless::Client;
+use Business::GoCardless::Bill;
+
+=head1 ATTRIBUTES
+
+=head2 token
+
+=cut
 
 has token => (
     is       => 'ro',
@@ -39,6 +61,33 @@ has client => (
         );
     },
 );
+
+=head1 METHODS
+
+=head2 bill
+
+=cut
+
+sub bill {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Bill' );
+}
+
+sub _generic_find_obj {
+    my ( $self,$id,$class ) = @_;
+    $class = "Business::GoCardless::$class";
+    my $obj = $class->new(
+        id     => $id,
+        client => $self->client
+    );
+    return $obj->find_with_client;
+}
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+=cut
 
 1;
 

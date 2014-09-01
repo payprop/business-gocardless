@@ -8,8 +8,17 @@ has endpoint => (
     default  => sub {
         my ( $self ) = @_;
         my ( $class ) = lc( ( split( ':',ref( $self ) ) )[-1] );
-        return "/${class}s/%d";
+        return "/${class}s/%s";
     },
+);
+
+has client => (
+    is       => 'ro',
+    isa      => sub {
+        confess( "$_[0] is not a Business::GoCardless::Client" )
+            if ref $_[0] ne 'Business::GoCardless::Client'
+    },
+    required => 1,
 );
 
 sub save_data {
@@ -17,11 +26,11 @@ sub save_data {
 
     if ( $self->persisted ) {
         Business::GoCardless::Exception->throw({
-            error => ref( $self ) . " cannot be updated"
+            message => ref( $self ) . " cannot be updated"
         }) if ! $self->updatable;
     } else {
         Business::GoCardless::Exception->throw({
-            error => ref( $self ) . " cannot be created"
+            message => ref( $self ) . " cannot be created"
         }) if ! $self->creatable;
     }
 
@@ -29,6 +38,23 @@ sub save_data {
     my $path   = sprintf( $self->endpoint,$self->id );
     my $res    = $self->client->send( "api_${method}",$path,$data );
 
+}
+
+sub find_with_client {
+    my ( $self ) = @_;
+
+    my $path = sprintf( $self->endpoint,$self->id );
+    my $data = $self->client->api_get( $path );
+
+    return $self->new(
+        client => $self->client,
+        %{ $data },
+    );
+}
+
+sub _operation {
+    my ( $self,$verb ) = @_;
+    $self->client->api_post( sprintf( $self->endpoint,$self->id ) . "/$verb" );
 }
 
 1;

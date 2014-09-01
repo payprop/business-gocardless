@@ -53,11 +53,16 @@ get '/merchants/:mid/confirm_resource' => sub {
     my $sig   = $c->param( 'signature' );
     my $state = $c->param( 'state' );
 
-    if ( $state ) {
-        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig&state=$state" );
-    } else {
-        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig" );
-    }
+    $c->render(
+        text   => 'Success',
+        status => 200,
+    );
+
+#    if ( $state ) {
+#        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig&state=$state" );
+#    } else {
+#        $c->redirect_to( "https://sandbox.gocardless.com/merchants/$mid/confirm_resource?resource_uri=$uri&resource_id=$id&resource_type=$type&signature=$sig" );
+#    }
 };
 
 sub _bad_request {

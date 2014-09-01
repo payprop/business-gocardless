@@ -7,9 +7,17 @@ use Test::Most;
 use Test::Deep;
 use Test::Exception;
 
+use Business::GoCardless::Client;
+
 use_ok( 'Business::GoCardless::Bill' );
 isa_ok(
-    my $Bill = Business::GoCardless::Bill->new,
+    my $Bill = Business::GoCardless::Bill->new(
+        client => Business::GoCardless::Client->new(
+            token      => 'foo',
+            app_id     => 'bar',
+            app_secret => 'baz',
+        ),
+    ),
     'Business::GoCardless::Bill'
 );
 
@@ -49,7 +57,7 @@ can_ok(
     /,
 );
 
-is( $Bill->endpoint,'/bills/%d','endpoint' );
+is( $Bill->endpoint,'/bills/%s','endpoint' );
 
 throws_ok(
     sub { $Bill->source( 'bad' ) },
@@ -58,9 +66,9 @@ throws_ok(
 );
 
 is(
-    $@->error,
+    $@->message,
     'source object must be one of PreAuthorization, Subscription',
-    ' ... expected error'
+    ' ... expected message'
 );
 
 done_testing();

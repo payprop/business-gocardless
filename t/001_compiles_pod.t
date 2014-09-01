@@ -20,7 +20,7 @@ my @files;
 
 find(
   {
-    wanted => sub { /\.pm$/ and push @files, $File::Find::name },
+    wanted => sub { /GoCardless\.pm$/ and push @files, $File::Find::name },
     no_chdir => 1
   },
   -e 'blib' ? 'blib' : 'lib',
