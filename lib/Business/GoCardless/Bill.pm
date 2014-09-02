@@ -32,7 +32,7 @@ has [ qw/
 );
 
 sub retry  { shift->_operation( 'retry' ); }
-sub cancel { shift->_operation( 'cancel','api_get' ); }
+sub cancel { shift->_operation( 'cancel','api_put' ); }
 sub refund { shift->_operation( 'refund' ); }
 
 sub pending     { return shift->status eq 'pending' }

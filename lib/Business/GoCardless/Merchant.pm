@@ -1,8 +1,11 @@
 package Business::GoCardless::Merchant;
 
 use Moo;
-
 extends 'Business::GoCardless::Resource';
+
+use Business::GoCardless::Bill;
+use Business::GoCardless::PreAuthorization;
+use Business::GoCardless::Payout;
 
 has [ qw/
     balance
@@ -51,6 +54,22 @@ sub bills  {
     } @{ $data };
 
     return @bills;
+}
+
+sub pre_authorizations  {
+    my ( $self ) = @_;
+
+    my $data = $self->client->api_get(
+        sprintf( $self->endpoint,$self->id ) . "/pre_authorizations"
+    );
+
+    my @pre_auths = map {
+        Business::GoCardless::PreAuthorization->new(
+            client => $self->client,%{ $_ }
+        );
+    } @{ $data };
+
+    return @pre_auths;
 }
 
 sub payouts {

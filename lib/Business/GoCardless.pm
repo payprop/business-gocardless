@@ -68,7 +68,7 @@ has client => (
 
 =head2 new_bill_url
 
-=head2 confirm_resource
+=head2 confirm_bill
 
 =head2 bill
 
@@ -81,9 +81,12 @@ sub new_bill_url {
     return $self->client->new_bill_url( \%params );
 }
 
-sub confirm_resource {
-    my ( $self,%params ) = @_;
-    return $self->client->confirm_resource( \%params );
+sub confirm_bill {
+    my ( $self,$id ) = @_;
+    return $self->confirm_resource(
+        resource_id   => $id,
+        resource_type => 'bill',
+    );
 }
 
 sub bill {
@@ -128,6 +131,52 @@ sub payouts {
 sub payout {
     my ( $self,$id ) = @_;
     return $self->_generic_find_obj( $id,'Payout' );
+}
+
+=head1 PreAuthorization
+
+=head2 new_pre_authorization_url
+
+=head2 confirm_pre_authorization
+
+=head2 pre_authorization
+
+=head2 pre_authorizations
+
+=cut
+
+sub new_pre_authorization_url {
+    my ( $self,%params ) = @_;
+    return $self->client->new_pre_authorization_url( \%params );
+}
+
+sub confirm_pre_authorization {
+    my ( $self,$id ) = @_;
+    return $self->confirm_resource(
+        resource_id   => $id,
+        resource_type => 'pre_authorization',
+    );
+}
+
+sub pre_authorization {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'PreAuthorization' );
+}
+
+sub pre_authorizations {
+    my ( $self,$merchant_id ) = @_;
+    return $self->merchant( $merchant_id )->pre_authorizations;
+}
+
+=head1 Common
+
+=head2 confirm_resource
+
+=cut
+
+sub confirm_resource {
+    my ( $self,%params ) = @_;
+    return $self->client->confirm_resource( \%params );
 }
 
 sub _generic_find_obj {

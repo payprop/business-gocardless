@@ -7,7 +7,9 @@ has endpoint => (
     is       => 'ro',
     default  => sub {
         my ( $self ) = @_;
-        my ( $class ) = lc( ( split( ':',ref( $self ) ) )[-1] );
+        my ( $class ) = ( split( ':',ref( $self ) ) )[-1];
+        $class =~ s/([a-z])([A-Z])/$1 . '_' . lc( $2 )/eg;
+        $class = lc( $class );
         return "/${class}s/%s";
     },
 );
@@ -35,11 +37,12 @@ sub find_with_client {
 }
 
 sub _operation {
-    my ( $self,$verb,$method ) = @_;
+    my ( $self,$verb,$method,$params ) = @_;
 
     $method //= 'api_post',
     my $data = $self->client->$method(
-        sprintf( $self->endpoint,$self->id ) . "/$verb"
+        sprintf( $self->endpoint,$self->id ) . "/$verb",
+        $params
     );
 
     foreach my $attr ( keys( %{ $data } ) ) {

@@ -4,6 +4,7 @@ use Moo;
 with 'Business::GoCardless::Utils';
 use Business::GoCardless::Exception;
 use Business::GoCardless::Bill;
+use Business::GoCardless::PreAuthorization;
 
 use Carp qw/ confess /;
 use POSIX qw/ strftime /;
@@ -57,6 +58,11 @@ sub new_bill_url {
     return $self->new_limit_url( 'bill',$params );
 }
 
+sub new_pre_authorization_url {
+    my ( $self,$params ) = @_;
+    return $self->new_limit_url( 'pre_authorization',$params );
+}
+
 sub new_limit_url {
     my ( $self,$type,$limit_params ) = @_;
 
@@ -66,10 +72,10 @@ sub new_limit_url {
         nonce     => $self->generate_nonce,
         timestamp => strftime( "%Y-%m-%dT%H:%M:%SZ",gmtime ),
         client_id => $self->app_id,
+        ( map { ( $limit_params->{$_}
+            ? ( $_ => delete( $limit_params->{$_} ) ) : ()
+        ) } qw/ redirect_uri cancel_uri cancel_uri state / ),
         $type     => $limit_params,
-        ( map {
-            ( $limit_params->{$_} ? ( $_ => $limit_params->{$_} ) : () )
-        } qw/ redirect_uri cancel_uri cancel_uri / )
     };
 
     $params->{signature} = $self->sign_params( $params,$self->app_secret );
@@ -116,7 +122,9 @@ sub confirm_resource {
 
     if ( $res->is_success ) {
         
-        my $class = "Business::GoCardless::".ucfirst( $params->{resource_type} );
+        my $class_suffix = ucfirst( $params->{resource_type} );
+        $class_suffix    =~ s/_([A-z])/uc($1)/ge;
+        my $class = "Business::GoCardless::$class_suffix";
         my $obj   = $class->new(
             client => $self,
             id     => $params->{resource_id}

@@ -52,6 +52,7 @@ $mock->mock( 'is_success',sub { 1 } );
 test_bill( $GoCardless,$mock );
 test_merchant( $GoCardless,$mock );
 test_payout( $GoCardless,$mock );
+test_pre_authorization( $GoCardless,$mock );
 
 done_testing();
 
@@ -72,20 +73,16 @@ sub test_bill {
                 first_name       => "Lee",
             }
         ),
-        qr!https://gocardless\.com/connect/bills/new\?bill%5Bamount%5D=100&bill%5Bcancel_uri%5D=http%3A%2F%2Flocalhost%2Fcancel&bill%5Bdescription%5D=Test%20Bill%20for%20testing&bill%5Bmerchant_id%5D=baz&bill%5Bname%5D=Test%20Bill&bill%5Bredirect_uri%5D=http%3A%2F%2Flocalhost%2Fsuccess&bill%5Bstate%5D=id_9SX5G36&bill%5Buser%5D%5Bfirst_name%5D=Lee&cancel_uri=http%3A%2F%2Flocalhost%2Fcancel&client_id=foo&nonce=.*?&redirect_uri=http%3A%2F%2Flocalhost%2Fsuccess&signature=.*?&timestamp=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z!,
+        qr!https://gocardless\.com/connect/bills/new\?bill%5Bamount%5D=100&bill%5Bdescription%5D=Test%20Bill%20for%20testing&bill%5Bmerchant_id%5D=baz&bill%5Bname%5D=Test%20Bill&bill%5Buser%5D%5Bfirst_name%5D=Lee&cancel_uri=http%3A%2F%2Flocalhost%2Fcancel&client_id=foo&nonce=.*?&redirect_uri=http%3A%2F%2Flocalhost%2Fsuccess&signature=.*?&timestamp=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z!,
         '->new_bill_url returns a url'
     );
 
     $mock->mock( 'content',sub { _bill_json() } );
-    my $Bill = $GoCardless->confirm_resource(
-        resource_id   => 'foo',
-        resource_type => 'bill',
-    );
 
     cmp_deeply(
-        $Bill,
+        my $Bill = $GoCardless->confirm_bill( 'foo' ),
         _bill_obj(),
-        '->confirm_resource returns a Business::GoCardless::Bill object'
+        '->confirm_bill returns a Business::GoCardless::Bill object'
     );
 
     my $i = 0;
@@ -183,6 +180,153 @@ sub test_payout {
     );
 }
 
+sub test_pre_authorization {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    note( "PreAuthorization" );
+    like(
+        my $new_bill_url = $GoCardless->new_pre_authorization_url(
+            max_amount         => 100,
+            interval_length    => 10,
+            interval_unit      => 'day',
+            expires_at         => '2020-01-01',
+            name               => "Test PreAuthorization",
+            description        => "Test PreAuthorization for testing",
+            interval_count     => 10,
+            setup_fee          => 500,
+            calendar_intervals => 0,
+            redirect_uri       => "http://localhost/success",
+            cancel_uri         => "http://localhost/cancel",
+            state              => "id_9SX5G36",
+            user               => {
+                first_name     => "Lee",
+            }
+        ),
+        qr!https://gocardless\.com/connect/pre_authorizations/new\?cancel_uri=http%3A%2F%2Flocalhost%2Fcancel&client_id=foo&nonce=.*?&pre_authorization%5Bcalendar_intervals%5D=0&pre_authorization%5Bdescription%5D=Test%20PreAuthorization%20for%20testing&pre_authorization%5Bexpires_at%5D=2020-01-01&pre_authorization%5Binterval_count%5D=10&pre_authorization%5Binterval_length%5D=10&pre_authorization%5Binterval_unit%5D=day&pre_authorization%5Bmax_amount%5D=100&pre_authorization%5Bmerchant_id%5D=baz&pre_authorization%5Bname%5D=Test%20PreAuthorization&pre_authorization%5Bsetup_fee%5D=500&pre_authorization%5Buser%5D%5Bfirst_name%5D=Lee&redirect_uri=http%3A%2F%2Flocalhost%2Fsuccess&signature=.*?&state=id_9SX5G36&timestamp=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z!,
+        '->new_pre_authorization_url returns a url'
+    );
+
+    $mock->mock( 'content',sub { _pre_auth_json() } );
+    cmp_deeply(
+        my $PreAuthorization = $GoCardless->confirm_pre_authorization( 'foo' ),
+        _pre_auth_obj(),
+        '->confirm_pre_authorization returns a Business::GoCardless::PreAuthorization object'
+    );
+
+    $mock->mock( 'content',sub { _bill_json() } );
+    my $Bill = $PreAuthorization->bill( amount => 10 );
+
+    cmp_deeply(
+        $Bill,
+        _bill_obj(),
+        '->bill returns a Business::GoCardless::Bill object'
+    );
+    
+    my $i = 0;
+
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of pre_auths
+            $i++
+                ? '[' . _pre_auth_json() . ',' . _pre_auth_json() . ']'
+                : _merchant_json()
+        }
+    );
+
+    my @pre_auths = $GoCardless->pre_authorizations;
+
+    cmp_deeply(
+        \@pre_auths,
+        [ _pre_auth_obj(),_pre_auth_obj() ],
+        '->pre_authorizations returns an array of Business::GoCardless::PreAuthorization objects'
+    );
+
+    $mock->mock( 'content',sub { _pre_auth_json() } );
+    $PreAuthorization = $GoCardless->pre_authorization( '123ABCD' );
+
+    cmp_deeply(
+        $PreAuthorization,
+        _pre_auth_obj(),
+        '->pre_authorization returns a Business::GoCardless::PreAuthorization object'
+    );
+
+    $mock->mock( 'content',sub { _pre_auth_json( 'cancelled' ) } );
+
+    cmp_deeply(
+        $PreAuthorization = $PreAuthorization->cancel,
+        _pre_auth_obj( 'cancelled' ),
+        '->cancel returns a Business::GoCardless::PreAuthorization object'
+    );
+
+    ok( $PreAuthorization->cancelled,'pre_authorization is cancelled' );
+
+}
+
+sub _pre_auth_obj {
+
+    my ( $status ) = @_;
+
+    $status //= 'active';
+
+    return bless( {
+  'client' => bless( {
+    'api_path' => '/api/v1',
+    'app_id' => 'foo',
+    'app_secret' => 'bar',
+    'base_url' => 'https://gocardless.com',
+    'merchant_id' => 'baz',
+    'token' => 'MvYX0i6snRh/1PXfPoc6'
+  }, 'Business::GoCardless::Client' ),
+  'created_at' => '2014-08-20T21:41:25Z',
+  'currency' => 'GBP',
+  'description' => 'GoCardless magazine',
+  'endpoint' => '/pre_authorizations/%s',
+  'expires_at' => '2016-08-20T21:41:25Z',
+  'id' => '1234ABCD',
+  'interval_length' => '1',
+  'interval_unit' => 'month',
+  'max_amount' => '750.00',
+  'merchant_id' => '06Z06JWQW1',
+  'name' => 'Computer support invoices',
+  'next_interval_start' => '2014-09-20T00:00:00Z',
+  'remaining_amount' => '750.00',
+  'setup_fee' => '10.00',
+  'status' => $status,
+  'uri' => 'https://gocardless.com/api/v1/pre-authorisations/1234ABCD',
+  'user_id' => 'FIVWCCVEST6S4D'
+}, 'Business::GoCardless::PreAuthorization' );
+}
+
+sub _pre_auth_json {
+
+    my ( $status ) = @_;
+
+    $status //= 'active';
+
+    return qq{
+{
+  "currency": "GBP",
+  "created_at": "2014-08-20T21:41:25Z",
+  "expires_at": "2016-08-20T21:41:25Z",
+  "id": "1234ABCD",
+  "name": "Computer support invoices",
+  "description": "GoCardless magazine",
+  "max_amount": "750.00",
+  "setup_fee": "10.00",
+  "remaining_amount": "750.00",
+  "interval_unit": "month",
+  "interval_length": "1",
+  "status": "$status",
+  "next_interval_start": "2014-09-20T00:00:00Z",
+  "merchant_id": "06Z06JWQW1",
+  "user_id": "FIVWCCVEST6S4D",
+  "uri": "https://gocardless.com/api/v1/pre-authorisations/1234ABCD"
+} }
+
+}
+
 sub _payout_json {
 
     my ( $extra ) = @_;
@@ -198,8 +342,7 @@ sub _payout_json {
     "id": "0BKR1AZNJF",
     "paid_at": "2013-05-10T17:00:26Z",
     "transaction_fees": "0.13"
-  }
-}
+  }}
 
 }
 
