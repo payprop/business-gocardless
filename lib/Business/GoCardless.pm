@@ -63,7 +63,7 @@ has client => (
     },
 );
 
-=head1 METHODS
+=head1 Bill METHODS
 
 =head2 new_bill_url
 
@@ -75,7 +75,6 @@ has client => (
 
 =cut
 
-# Bill methods
 sub new_bill_url {
     my ( $self,%params ) = @_;
     return $self->client->new_bill_url( \%params );
@@ -92,14 +91,25 @@ sub bill {
 }
 
 sub bills {
-    my ( $self,$id ) = @_;
-    return Business::GoCardless::Merchant->new(
-        client => $self->client,
-        id     => $self->client->merchant_id,
-    )->bills;
+    my ( $self,$merchant_id ) = @_;
+    return $self->merchant( $merchant_id )->bills;
 }
 
-# Merchant methods
+=head1 Merchant METHODS
+
+=head2 merchant
+
+=cut
+
+sub merchant {
+    my ( $self,$merchant_id ) = @_;
+
+    $merchant_id //= $self->client->merchant_id;
+    return Business::GoCardless::Merchant->new(
+        client => $self->client,
+        id     => $merchant_id
+    );
+}
 
 sub _generic_find_obj {
     my ( $self,$id,$class ) = @_;

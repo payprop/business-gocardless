@@ -22,6 +22,8 @@ my ( $token,$url,$app_id,$app_secret,$mid ) = @ENV{qw/
     GOCARDLESS_MERCHANT_ID
 /};
 
+$ENV{GOCARDLESS_DEV_TESTING} = 1;
+
 my $GoCardless = Business::GoCardless->new(
     token           => $token // 'DHDEF68S410DTCGNGDNA3DYDD5R',
     client_details  => {
@@ -52,7 +54,7 @@ note explain $GoCardless->client->confirm_resource({
 });
 =cut
 
-my $Bill = $GoCardless->bill( '0PTTCSFZT2' );
-note explain $Bill;
+my $Merchant = $GoCardless->merchant;
+note explain $Merchant;
 
 done_testing();

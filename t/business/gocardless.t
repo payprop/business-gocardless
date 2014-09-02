@@ -49,14 +49,14 @@ my $mock = Test::MockObject->new;
 $mock->mock( 'is_success',sub { 1 } );
 *LWP::UserAgent::request = sub { $mock };
 
-test_bill( $mock );
-test_merchant( $mock );
+test_bill( $GoCardless,$mock );
+test_merchant( $GoCardless,$mock );
 
 done_testing();
 
 sub test_bill {
 
-    my ( $mock ) = @_;
+    my ( $GoCardless,$mock ) = @_;
 
     note( "Bill" );
     like(
@@ -87,7 +87,18 @@ sub test_bill {
         '->confirm_resource returns a Business::GoCardless::Bill object'
     );
 
-    $mock->mock( 'content',sub { '[' . _bill_json() . ',' . _bill_json() . ']' } );
+    my $i = 0;
+
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of bills
+            $i++
+                ? '[' . _bill_json() . ',' . _bill_json() . ']'
+                : _merchant_json()
+        }
+    );
+
     my @bills = $GoCardless->bills;
 
     cmp_deeply(
@@ -134,6 +145,93 @@ sub test_bill {
 
 sub test_merchant {
 
+    my ( $GoCardless,$mock ) = @_;
+
+    note( "Merchant" );
+
+    $mock->mock( 'content',sub { _merchant_json() } );
+    cmp_deeply(
+        my $Merchant = $GoCardless->merchant,
+        _merchant_obj(),
+        '->merchant returns a Business::GoCardless::Merchant object',
+    );
+}
+
+sub _merchant_json {
+
+    return qq{{
+  "id":"06Z06JWQW1",
+  "name":"Company Ltd",
+  "description":"We do stuff.",
+  "created_at":"2014-01-22T10:27:42Z",
+  "first_name":"Lee",
+  "last_name":"Johnson",
+  "email":"lee\@foo.com",
+  "uri":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1",
+  "balance":"0.0",
+  "pending_balance":"0.0",
+  "next_payout_date":null,
+  "next_payout_amount":null,
+  "hide_variable_amount":false,
+  "sub_resource_uris":{
+    "users":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/users",
+    "bills":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/bills",
+    "pre_authorizations":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/pre_authorizations",
+    "subscriptions":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/subscriptions",
+    "payouts":"https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/payouts"
+  },
+  "gbp_balance":"0.0",
+  "eur_balance":"0.0",
+  "gbp_pending_balance":"0.0",
+  "eur_pending_balance":"0.0"
+}};
+}
+
+sub _merchant_obj {
+
+    return bless(
+        {
+            'balance' => '0.0',
+            'client'  => bless(
+                {
+                    'api_path'    => '/api/v1',
+                    'app_id'      => 'foo',
+                    'app_secret'  => 'bar',
+                    'base_url'    => 'https://gocardless.com',
+                    'merchant_id' => 'baz',
+                    'token'       => 'MvYX0i6snRh/1PXfPoc6'
+                },
+                'Business::GoCardless::Client'
+            ),
+            'created_at'           => '2014-01-22T10:27:42Z',
+            'description'          => 'We do stuff.',
+            'email'                => 'lee@foo.com',
+            'endpoint'             => '/merchants/%s',
+            'eur_balance'          => '0.0',
+            'eur_pending_balance'  => '0.0',
+            'first_name'           => 'Lee',
+            'gbp_balance'          => '0.0',
+            'gbp_pending_balance'  => '0.0',
+            'hide_variable_amount' => bless( do { \( my $o = 0 ) }, 'JSON::PP::Boolean' ),
+            'id'                   => '06Z06JWQW1',
+            'last_name'            => 'Johnson',
+            'name'                 => 'Company Ltd',
+            'next_payout_amount'   => undef,
+            'next_payout_date'     => undef,
+            'pending_balance'      => '0.0',
+            'sub_resource_uris'    => {
+                'bills'   => 'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/bills',
+                'payouts' => 'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/payouts',
+                'pre_authorizations' =>
+                    'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/pre_authorizations',
+                'subscriptions' =>
+                    'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/subscriptions',
+                'users' => 'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1/users'
+            },
+            'uri' => 'https://sandbox.gocardless.com/api/v1/merchants/06Z06JWQW1'
+        },
+        'Business::GoCardless::Merchant'
+        );
 }
 
 sub _bill_json {

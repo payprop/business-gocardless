@@ -6,12 +6,27 @@ use Business::GoCardless::Exception;
 extends 'Business::GoCardless::Resource';
 
 has [ qw/
-    id amount gocardless_fees partner_fees amount_minus_fees
-    currency description name status
-    can_be_retried can_be_cancelled is_setup_fee
-    source_id source_type uri
-    merchant_id user_id payout_id
-    created_at paid_at charge_customer_at
+    amount
+    amount_minus_fees
+    can_be_cancelled
+    can_be_retried
+    charge_customer_at
+    created_at
+    currency
+    description
+    gocardless_fees
+    id
+    is_setup_fee
+    merchant_id
+    name
+    paid_at
+    partner_fees
+    payout_id
+    source_id
+    source_type
+    status
+    uri
+    user_id
 / ] => (
     is => 'rw',
 );
