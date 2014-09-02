@@ -42,64 +42,23 @@ sub BUILD {
     return $self;
 }
 
-sub bills  {
-    my ( $self ) = @_;
+sub bills              { shift->_list( 'bills','Bill' ) }
+sub pre_authorizations { shift->_list( 'pre_authorizations','PreAuthorization' )}
+sub subscriptions      { shift->_list( 'subscriptions','Subscription' ) }
+sub payouts            { shift->_list( 'payouts','Payout' ) }
+
+sub _list {
+    my ( $self,$endpoint,$class ) = @_;
 
     my $data = $self->client->api_get(
-        sprintf( $self->endpoint,$self->id ) . "/bills"
+        sprintf( $self->endpoint,$self->id ) . "/$endpoint"
     );
 
-    my @bills = map {
-        Business::GoCardless::Bill->new( client => $self->client,%{ $_ } );
-    } @{ $data };
+    $class = "Business::GoCardless::$class";
+    my @objects = map { $class->new( client => $self->client,%{ $_ } ) }
+        @{ $data };
 
-    return @bills;
-}
-
-sub pre_authorizations  {
-    my ( $self ) = @_;
-
-    my $data = $self->client->api_get(
-        sprintf( $self->endpoint,$self->id ) . "/pre_authorizations"
-    );
-
-    my @pre_auths = map {
-        Business::GoCardless::PreAuthorization->new(
-            client => $self->client,%{ $_ }
-        );
-    } @{ $data };
-
-    return @pre_auths;
-}
-
-sub subscriptions  {
-    my ( $self ) = @_;
-
-    my $data = $self->client->api_get(
-        sprintf( $self->endpoint,$self->id ) . "/subscriptions"
-    );
-
-    my @subs = map {
-        Business::GoCardless::Subscription->new(
-            client => $self->client,%{ $_ }
-        );
-    } @{ $data };
-
-    return @subs;
-}
-
-sub payouts {
-    my ( $self ) = @_;
-
-    my $data = $self->client->api_get(
-        sprintf( $self->endpoint,$self->id ) . "/payouts"
-    );
-
-    my @payouts = map {
-        Business::GoCardless::Payout->new( client => $self->client,%{ $_ } );
-    } @{ $data };
-
-    return @payouts;
+    return @objects;
 }
 
 1;
