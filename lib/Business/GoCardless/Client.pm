@@ -3,8 +3,6 @@ package Business::GoCardless::Client;
 use Moo;
 with 'Business::GoCardless::Utils';
 use Business::GoCardless::Exception;
-use Business::GoCardless::Bill;
-use Business::GoCardless::PreAuthorization;
 
 use Carp qw/ confess /;
 use POSIX qw/ strftime /;

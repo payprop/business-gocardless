@@ -204,6 +204,18 @@ sub subscriptions {
     return $self->merchant( $merchant_id )->subscriptions;
 }
 
+
+=head1 User
+
+=head2 users
+
+=cut
+
+sub users {
+    my ( $self,$merchant_id ) = @_;
+    return $self->merchant( $merchant_id )->users;
+}
+
 =head1 Common
 
 =head2 confirm_resource

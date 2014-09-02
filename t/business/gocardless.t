@@ -54,6 +54,7 @@ test_merchant( $GoCardless,$mock );
 test_payout( $GoCardless,$mock );
 test_pre_authorization( $GoCardless,$mock );
 test_subscription( $GoCardless,$mock );
+test_user( $GoCardless,$mock );
 
 done_testing();
 
@@ -337,6 +338,66 @@ sub test_subscription {
     );
 
     ok( $Subscription->cancelled,'pre_authorization is cancelled' );
+
+}
+
+sub test_user {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    my $i = 0;
+
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of pre_auths
+            $i++
+                ? '[' . _user_json() . ',' . _user_json() . ']'
+                : _user_json()
+        }
+    );
+
+    my @users = $GoCardless->users;
+
+    cmp_deeply(
+        \@users,
+        [ _user_obj(),_user_obj() ],
+        '->users returns an array of Business::GoCardless::User objects'
+    );
+
+}
+
+sub _user_json {
+
+    return qq{
+  {
+    "created_at":"2011-11-18T17:06:15Z",
+    "email":"customer40\@gocardless.com",
+    "id": "JKH8HGKL9H",
+    "first_name":"Frank",
+    "last_name":"Smith"
+  } }
+
+}
+
+sub _user_obj {
+
+    return bless( {
+   'client' => bless( {
+     'api_path' => '/api/v1',
+     'app_id' => 'foo',
+     'app_secret' => 'bar',
+     'base_url' => 'https://gocardless.com',
+     'merchant_id' => 'baz',
+     'token' => 'MvYX0i6snRh/1PXfPoc6'
+   }, 'Business::GoCardless::Client' ),
+   'created_at' => '2011-11-18T17:06:15Z',
+   'email' => 'customer40@gocardless.com',
+   'endpoint' => '/users/%s',
+   'first_name' => 'Frank',
+   'id' => 'JKH8HGKL9H',
+   'last_name' => 'Smith'
+ }, 'Business::GoCardless::User' );
 
 }
 

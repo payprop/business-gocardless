@@ -6,6 +6,7 @@ extends 'Business::GoCardless::Resource';
 use Business::GoCardless::Bill;
 use Business::GoCardless::PreAuthorization;
 use Business::GoCardless::Payout;
+use Business::GoCardless::User;
 
 has [ qw/
     balance
@@ -46,6 +47,7 @@ sub bills              { shift->_list( 'bills','Bill' ) }
 sub pre_authorizations { shift->_list( 'pre_authorizations','PreAuthorization' )}
 sub subscriptions      { shift->_list( 'subscriptions','Subscription' ) }
 sub payouts            { shift->_list( 'payouts','Payout' ) }
+sub users              { shift->_list( 'users','User' ) }
 
 sub _list {
     my ( $self,$endpoint,$class ) = @_;
