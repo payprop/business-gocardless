@@ -24,12 +24,13 @@ WriteMakefile(
         'JSON'                 => 2.90,
     },
     BUILD_REQUIRES => {
-        'Test::Most'      => 0.31,
-        'Test::Deep'      => 0.112,
-        'Test::Exception' => 0.32,
-        'FindBin'         => 0, # FindBin was first released with perl 5.00307
-        'Mojolicious'     => 5.28,
-        'LWP::Simple'     => 6.00,
+        'Test::Most'       => 0.31,
+        'Test::Deep'       => 0.112,
+        'Test::Exception'  => 0.32,
+        'FindBin'          => 0, # FindBin was first released with perl 5.00307
+        'Mojolicious'      => 5.28,
+        'LWP::Simple'      => 6.00,
+        'Test::MockObject' => 1.20140408,
     },
     META_MERGE => {
         resources => {

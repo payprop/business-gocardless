@@ -2,6 +2,7 @@ package Business::GoCardless::Exception;
 
 use Moo;
 use JSON;
+use Carp qw/ cluck /;
 
 with 'Throwable';
 
@@ -11,6 +12,8 @@ has message => (
     required => 1,
     coerce   => sub {
         my ( $message ) = @_;
+
+        cluck $message if $ENV{GOCARDLESS_DEV_TESTING};
 
         if ( $message =~ /^[{\[]/ ) {
             # defensive decoding

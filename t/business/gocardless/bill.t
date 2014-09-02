@@ -13,9 +13,10 @@ use_ok( 'Business::GoCardless::Bill' );
 isa_ok(
     my $Bill = Business::GoCardless::Bill->new(
         client => Business::GoCardless::Client->new(
-            token      => 'foo',
-            app_id     => 'bar',
-            app_secret => 'baz',
+            token       => 'foo',
+            app_id      => 'bar',
+            app_secret  => 'baz',
+            merchant_id => 'boz',
         ),
     ),
     'Business::GoCardless::Bill'
@@ -44,32 +45,23 @@ can_ok(
         created_at
         paid_at
         charge_customer_at
+        uri
 
         retry
         cancel
         refund
-        save
+
         pending
         paid
         failed
+        chargedback
+        cancelled
         withdrawn
         refunded
     /,
 );
 
 is( $Bill->endpoint,'/bills/%s','endpoint' );
-
-throws_ok(
-    sub { $Bill->source( 'bad' ) },
-    'Business::GoCardless::Exception',
-    'source with bad object throws',
-);
-
-is(
-    $@->message,
-    'source object must be one of PreAuthorization, Subscription',
-    ' ... expected message'
-);
 
 done_testing();
 

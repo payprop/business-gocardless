@@ -31,17 +31,6 @@ can_ok(
     /,
 );
 
-my $new_url = $Client->new_bill_url({
-    amount => 100,
-    name   => 'Example payment',
-});
-
-like(
-    $new_url,
-    qr!https://gocardless\.com/connect/bills/new\?bill%5Bamount%5D=100!,
-    'new_bill_url',
-);
-
 done_testing();
 
 # vim: ts=4:sw=4:et

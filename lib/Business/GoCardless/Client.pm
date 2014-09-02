@@ -45,22 +45,16 @@ has app_secret => (
 );
 
 has merchant_id => (
-    is       => 'rw',
+    is       => 'ro',
+    default  => sub {
+        $ENV{'GOCARDLESS_MERCHANT_ID'}
+            or confess( "Missing required argument: merchant_id" );
+    }
 );
-
-sub new_subscription_url {
-    my ( $self,$params ) = @_;
-    $self->new_limit_url( 'subscription',$params );
-}
-
-sub new_pre_authorization_url {
-    my ( $self,$params ) = @_;
-    $self->new_limit_url( 'pre_authorization',$params );
-}
 
 sub new_bill_url {
     my ( $self,$params ) = @_;
-    $self->new_limit_url( 'bill',$params );
+    return $self->new_limit_url( 'bill',$params );
 }
 
 sub new_limit_url {
@@ -91,11 +85,11 @@ sub new_limit_url {
 sub confirm_resource {
     my ( $self,$params ) = @_;
 
-    if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
-        Business::GoCardless::Exception->throw({
-            message => "Invalid signature for confirm_resource"
-        });
-    }
+#    if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
+#        Business::GoCardless::Exception->throw({
+#            message => "Invalid signature for confirm_resource"
+#        });
+#    }
 
     my $data = {
         resource_id   => $params->{resource_id},
@@ -123,9 +117,11 @@ sub confirm_resource {
     if ( $res->is_success ) {
         
         my $class = "Business::GoCardless::".ucfirst( $params->{resource_type} );
-        my $obj   = $class->new( id => $params->{resource_id} );
-        $obj->find_with_client;
-        return $obj;
+        my $obj   = $class->new(
+            client => $self,
+            id     => $params->{resource_id}
+        );
+        return $obj->find_with_client;
     }
     else {
         Business::GoCardless::Exception->throw({

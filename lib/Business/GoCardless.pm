@@ -19,8 +19,9 @@ Business::GoCardless
 use Moo;
 use Carp qw/ confess /;
 
-use Business::GoCardless::Client;
 use Business::GoCardless::Bill;
+use Business::GoCardless::Client;
+use Business::GoCardless::Merchant;
 
 =head1 ATTRIBUTES
 
@@ -64,14 +65,41 @@ has client => (
 
 =head1 METHODS
 
+=head2 new_bill_url
+
+=head2 confirm_resource
+
 =head2 bill
 
+=head2 bills
+
 =cut
+
+# Bill methods
+sub new_bill_url {
+    my ( $self,%params ) = @_;
+    return $self->client->new_bill_url( \%params );
+}
+
+sub confirm_resource {
+    my ( $self,%params ) = @_;
+    return $self->client->confirm_resource( \%params );
+}
 
 sub bill {
     my ( $self,$id ) = @_;
     return $self->_generic_find_obj( $id,'Bill' );
 }
+
+sub bills {
+    my ( $self,$id ) = @_;
+    return Business::GoCardless::Merchant->new(
+        client => $self->client,
+        id     => $self->client->merchant_id,
+    )->bills;
+}
+
+# Merchant methods
 
 sub _generic_find_obj {
     my ( $self,$id,$class ) = @_;

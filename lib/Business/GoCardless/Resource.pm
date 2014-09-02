@@ -21,40 +21,32 @@ has client => (
     required => 1,
 );
 
-sub save_data {
-    my ( $self,$data ) = @_;
-
-    if ( $self->persisted ) {
-        Business::GoCardless::Exception->throw({
-            message => ref( $self ) . " cannot be updated"
-        }) if ! $self->updatable;
-    } else {
-        Business::GoCardless::Exception->throw({
-            message => ref( $self ) . " cannot be created"
-        }) if ! $self->creatable;
-    }
-
-    my $method = $self->persisted ? 'put' : 'post';
-    my $path   = sprintf( $self->endpoint,$self->id );
-    my $res    = $self->client->send( "api_${method}",$path,$data );
-
-}
-
 sub find_with_client {
     my ( $self ) = @_;
 
     my $path = sprintf( $self->endpoint,$self->id );
     my $data = $self->client->api_get( $path );
 
-    return $self->new(
-        client => $self->client,
-        %{ $data },
-    );
+    foreach my $attr ( keys( %{ $data } ) ) {
+        $self->$attr( $data->{$attr} );
+    }
+
+    return $self;
 }
 
 sub _operation {
-    my ( $self,$verb ) = @_;
-    $self->client->api_post( sprintf( $self->endpoint,$self->id ) . "/$verb" );
+    my ( $self,$verb,$method ) = @_;
+
+    $method //= 'api_post',
+    my $data = $self->client->$method(
+        sprintf( $self->endpoint,$self->id ) . "/$verb"
+    );
+
+    foreach my $attr ( keys( %{ $data } ) ) {
+        $self->$attr( $data->{$attr} );
+    }
+
+    return $self;
 }
 
 1;
