@@ -53,6 +53,7 @@ test_bill( $GoCardless,$mock );
 test_merchant( $GoCardless,$mock );
 test_payout( $GoCardless,$mock );
 test_pre_authorization( $GoCardless,$mock );
+test_subscription( $GoCardless,$mock );
 
 done_testing();
 
@@ -261,6 +262,143 @@ sub test_pre_authorization {
     );
 
     ok( $PreAuthorization->cancelled,'pre_authorization is cancelled' );
+
+}
+
+sub test_subscription {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    note( "Subscription" );
+    like(
+        my $new_subscription_url = $GoCardless->new_subscription_url(
+            amount             => 100,
+            interval_length    => 10,
+            interval_unit      => 'day',
+            name               => "Test Subscription",
+            description        => "Test Subscription for testing",
+            start_at           => '2010-01-01',
+            expires_at         => '2020-01-01',
+            interval_count     => 10,
+            setup_fee          => 500,
+            redirect_uri       => "http://localhost/success",
+            cancel_uri         => "http://localhost/cancel",
+            state              => "id_9SX5G36",
+            user               => {
+                first_name     => "Lee",
+            }
+        ),
+        qr!https://gocardless\.com/connect/subscriptions/new\?cancel_uri=http%3A%2F%2Flocalhost%2Fcancel&client_id=foo&nonce=.*?&redirect_uri=http%3A%2F%2Flocalhost%2Fsuccess&signature=.*?&state=id_9SX5G36&subscription%5Bamount%5D=100&subscription%5Bdescription%5D=Test%20Subscription%20for%20testing&subscription%5Bexpires_at%5D=2020-01-01&subscription%5Binterval_count%5D=10&subscription%5Binterval_length%5D=10&subscription%5Binterval_unit%5D=day&subscription%5Bmerchant_id%5D=baz&subscription%5Bname%5D=Test%20Subscription&subscription%5Bsetup_fee%5D=500&subscription%5Bstart_at%5D=2010-01-01&subscription%5Buser%5D%5Bfirst_name%5D=Lee&timestamp=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z!,
+        '->new_subscription_url returns a url'
+    );
+
+    $mock->mock( 'content',sub { _subscription_json() } );
+    cmp_deeply(
+        my $PreAuthorization = $GoCardless->confirm_subscription( 'foo' ),
+        _subscription_obj(),
+        '->confirm_subscriptionorization returns a Business::GoCardless::Subscription object'
+    );
+
+    my $i = 0;
+
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of pre_auths
+            $i++
+                ? '[' . _subscription_json() . ',' . _subscription_json() . ']'
+                : _merchant_json()
+        }
+    );
+
+    my @subs = $GoCardless->subscriptions;
+
+    cmp_deeply(
+        \@subs,
+        [ _subscription_obj(),_subscription_obj() ],
+        '->subscriptions returns an array of Business::GoCardless::Subscription objects'
+    );
+
+    $mock->mock( 'content',sub { _subscription_json() } );
+    my $Subscription = $GoCardless->subscription( '123ABCD' );
+
+    cmp_deeply(
+        $Subscription,
+        _subscription_obj(),
+        '->subscription returns a Business::GoCardless::Subscription object'
+    );
+
+    $mock->mock( 'content',sub { _subscription_json( 'cancelled' ) } );
+
+    cmp_deeply(
+        $Subscription = $Subscription->cancel,
+        _subscription_obj( 'cancelled' ),
+        '->cancel returns a Business::GoCardless::Subscription object'
+    );
+
+    ok( $Subscription->cancelled,'pre_authorization is cancelled' );
+
+}
+
+sub _subscription_json {
+
+    my ( $status ) = @_;
+
+    $status //= 'active';
+
+    return qq{
+{
+  "currency": "GBP",
+  "created_at": "2014-08-20T21:41:25Z",
+  "expires_at": "2016-08-20T21:41:25Z",
+  "id": "0NZ71WBMVF",
+  "name": "Membership subscription",
+  "description": "GoCardless magazine",
+  "amount": "7.50",
+  "setup_fee": "0.00",
+  "interval_unit": "month",
+  "interval_length": "1",
+  "status": "$status",
+  "next_interval_start": "2014-09-20T00:00:00Z",
+  "merchant_id": "06Z06JWQW1",
+  "user_id": "FIVWCCVEST6S4D",
+  "uri": "https://gocardless.com/api/v1/subscriptions/0NZ71WBMVF"
+} }
+
+}
+
+sub _subscription_obj {
+
+    my ( $status ) = @_;
+
+    $status //= 'active';
+
+    return bless( {
+   'amount' => '7.50',
+   'client' => bless( {
+     'api_path' => '/api/v1',
+     'app_id' => 'foo',
+     'app_secret' => 'bar',
+     'base_url' => 'https://gocardless.com',
+     'merchant_id' => 'baz',
+     'token' => 'MvYX0i6snRh/1PXfPoc6'
+   }, 'Business::GoCardless::Client' ),
+   'created_at' => '2014-08-20T21:41:25Z',
+   'currency' => 'GBP',
+   'description' => 'GoCardless magazine',
+   'endpoint' => '/subscriptions/%s',
+   'expires_at' => '2016-08-20T21:41:25Z',
+   'id' => '0NZ71WBMVF',
+   'interval_length' => '1',
+   'interval_unit' => 'month',
+   'merchant_id' => '06Z06JWQW1',
+   'name' => 'Membership subscription',
+   'next_interval_start' => '2014-09-20T00:00:00Z',
+   'setup_fee' => '0.00',
+   'status' => $status,
+   'uri' => 'https://gocardless.com/api/v1/subscriptions/0NZ71WBMVF',
+   'user_id' => 'FIVWCCVEST6S4D'
+}, 'Business::GoCardless::Subscription' );
 
 }
 

@@ -23,6 +23,7 @@ use Business::GoCardless::Bill;
 use Business::GoCardless::Client;
 use Business::GoCardless::Merchant;
 use Business::GoCardless::Payout;
+use Business::GoCardless::Subscription;
 
 =head1 ATTRIBUTES
 
@@ -166,6 +167,41 @@ sub pre_authorization {
 sub pre_authorizations {
     my ( $self,$merchant_id ) = @_;
     return $self->merchant( $merchant_id )->pre_authorizations;
+}
+
+=head1 Subscription
+
+=head2 new_subscription_url
+
+=head2 confirm_subscription
+
+=head2 subscription
+
+=head2 subscriptions
+
+=cut
+
+sub new_subscription_url {
+    my ( $self,%params ) = @_;
+    return $self->client->new_subscription_url( \%params );
+}
+
+sub confirm_subscription {
+    my ( $self,$id ) = @_;
+    return $self->confirm_resource(
+        resource_id   => $id,
+        resource_type => 'subscription',
+    );
+}
+
+sub subscription {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Subscription' );
+}
+
+sub subscriptions {
+    my ( $self,$merchant_id ) = @_;
+    return $self->merchant( $merchant_id )->subscriptions;
 }
 
 =head1 Common

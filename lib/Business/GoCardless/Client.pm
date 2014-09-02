@@ -63,6 +63,11 @@ sub new_pre_authorization_url {
     return $self->new_limit_url( 'pre_authorization',$params );
 }
 
+sub new_subscription_url {
+    my ( $self,$params ) = @_;
+    return $self->new_limit_url( 'subscription',$params );
+}
+
 sub new_limit_url {
     my ( $self,$type,$limit_params ) = @_;
 

@@ -72,6 +72,22 @@ sub pre_authorizations  {
     return @pre_auths;
 }
 
+sub subscriptions  {
+    my ( $self ) = @_;
+
+    my $data = $self->client->api_get(
+        sprintf( $self->endpoint,$self->id ) . "/subscriptions"
+    );
+
+    my @subs = map {
+        Business::GoCardless::Subscription->new(
+            client => $self->client,%{ $_ }
+        );
+    } @{ $data };
+
+    return @subs;
+}
+
 sub payouts {
     my ( $self ) = @_;
 
