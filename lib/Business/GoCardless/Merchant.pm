@@ -1,7 +1,6 @@
 package Business::GoCardless::Merchant;
 
 use Moo;
-use Business::GoCardless::Exception;
 
 extends 'Business::GoCardless::Resource';
 
@@ -52,6 +51,20 @@ sub bills  {
     } @{ $data };
 
     return @bills;
+}
+
+sub payouts {
+    my ( $self ) = @_;
+
+    my $data = $self->client->api_get(
+        sprintf( $self->endpoint,$self->id ) . "/payouts"
+    );
+
+    my @payouts = map {
+        Business::GoCardless::Payout->new( client => $self->client,%{ $_ } );
+    } @{ $data };
+
+    return @payouts;
 }
 
 1;

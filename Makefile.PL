@@ -14,7 +14,6 @@ WriteMakefile(
     PREREQ_PM => {
         'Moo'                  => 1.006,
         'Carp'                 => 0, # Carp was first released with perl 5
-        'OAuth::Simple'        => 1.01,
         'Throwable'            => 0.200011,
         'POSIX'                => 0, # POSIX was first released with perl 5
         'MIME::Base64'         => 0, # MIME::Base64 was first released with perl v5.7.3

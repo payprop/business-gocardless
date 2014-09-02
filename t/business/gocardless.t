@@ -51,6 +51,7 @@ $mock->mock( 'is_success',sub { 1 } );
 
 test_bill( $GoCardless,$mock );
 test_merchant( $GoCardless,$mock );
+test_payout( $GoCardless,$mock );
 
 done_testing();
 
@@ -155,6 +156,83 @@ sub test_merchant {
         _merchant_obj(),
         '->merchant returns a Business::GoCardless::Merchant object',
     );
+
+    $mock->mock( 'content',sub { _payouts_json() } );
+
+    my @payouts = $Merchant->payouts;
+    cmp_deeply(
+        \@payouts,
+        [ _payout_obj( { 'app_ids' => [ 'ABC' ] } ) ],
+        '->payouts returns an array of Business::GoCardless::Payout objects'
+    );
+}
+
+sub test_payout {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    note( "Payout" );
+
+    $mock->mock( 'content',sub { _payout_json() } );
+    my $Payout = $GoCardless->payout( '0BKR1AZNJF' );
+
+    cmp_deeply(
+        $Payout,
+        _payout_obj(),
+        '->payout returns a Business::GoCardless::Payout object'
+    );
+}
+
+sub _payout_json {
+
+    my ( $extra ) = @_;
+
+    $extra //= '';
+
+    return qq{
+  {
+    $extra
+    "amount": "12.37",
+    "bank_reference": "JOHNSMITH-Z5DRM",
+    "created_at": "2013-05-10T16:34:34Z",
+    "id": "0BKR1AZNJF",
+    "paid_at": "2013-05-10T17:00:26Z",
+    "transaction_fees": "0.13"
+  }
+}
+
+}
+
+sub _payouts_json {
+
+    my $payout = _payout_json( '"app_ids": [ "ABC" ],' );
+    return qq{ [ $payout ] };
+}
+
+sub _payout_obj {
+
+    my ( $extra ) = @_;
+
+    $extra //= {};
+
+    return bless( {
+     %{ $extra },
+     'amount' => '12.37',
+     'bank_reference' => 'JOHNSMITH-Z5DRM',
+     'client' => bless( {
+       'api_path' => '/api/v1',
+       'app_id' => 'foo',
+       'app_secret' => 'bar',
+       'base_url' => 'https://gocardless.com',
+       'merchant_id' => 'baz',
+       'token' => 'MvYX0i6snRh/1PXfPoc6'
+     }, 'Business::GoCardless::Client' ),
+     'created_at' => '2013-05-10T16:34:34Z',
+     'endpoint' => '/payouts/%s',
+     'id' => '0BKR1AZNJF',
+     'paid_at' => '2013-05-10T17:00:26Z',
+     'transaction_fees' => '0.13'
+   }, 'Business::GoCardless::Payout' );
 }
 
 sub _merchant_json {

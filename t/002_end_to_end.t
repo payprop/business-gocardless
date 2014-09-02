@@ -54,7 +54,7 @@ note explain $GoCardless->client->confirm_resource({
 });
 =cut
 
-my $Merchant = $GoCardless->merchant;
-note explain $Merchant;
+my @payouts = $GoCardless->payouts;
+note explain \@payouts;
 
 done_testing();

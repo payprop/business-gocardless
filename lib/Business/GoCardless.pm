@@ -22,6 +22,7 @@ use Carp qw/ confess /;
 use Business::GoCardless::Bill;
 use Business::GoCardless::Client;
 use Business::GoCardless::Merchant;
+use Business::GoCardless::Payout;
 
 =head1 ATTRIBUTES
 
@@ -63,7 +64,7 @@ has client => (
     },
 );
 
-=head1 Bill METHODS
+=head1 Bill
 
 =head2 new_bill_url
 
@@ -95,9 +96,11 @@ sub bills {
     return $self->merchant( $merchant_id )->bills;
 }
 
-=head1 Merchant METHODS
+=head1 Merchant
 
 =head2 merchant
+
+=head2 payouts
 
 =cut
 
@@ -109,6 +112,22 @@ sub merchant {
         client => $self->client,
         id     => $merchant_id
     );
+}
+
+sub payouts {
+    my ( $self,$merchant_id ) = @_;
+    return $self->merchant( $merchant_id )->payouts;
+}
+
+=head1 Payout
+
+=head2 payout
+
+=cut
+
+sub payout {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Payout' );
 }
 
 sub _generic_find_obj {
