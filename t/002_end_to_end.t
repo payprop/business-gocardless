@@ -68,7 +68,7 @@ my $NewBill = $GoCardless->bill( $Bill->id );
 is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
 =cut
 
-my @bills = $GoCardless->bills;
+my @bills = $GoCardless->bills( status => 'cancelled' );
 note scalar( @bills );
 note explain [ map { $_->id } @bills ];
 

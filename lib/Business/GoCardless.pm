@@ -86,8 +86,9 @@ sub bill {
 }
 
 sub bills {
-    my ( $self,$merchant_id ) = @_;
-    return $self->merchant( $merchant_id )->bills;
+    my ( $self,%filters ) = @_;
+    return $self->merchant( $self->client->merchant_id )
+        ->bills( \%filters );
 }
 
 =head1 Merchant
@@ -109,8 +110,9 @@ sub merchant {
 }
 
 sub payouts {
-    my ( $self,$merchant_id ) = @_;
-    return $self->merchant( $merchant_id )->payouts;
+    my ( $self,%filters ) = @_;
+    return $self->merchant( $self->client->merchant_id )
+        ->payouts( \%filters );
 }
 
 =head1 Payout
@@ -145,8 +147,9 @@ sub pre_authorization {
 }
 
 sub pre_authorizations {
-    my ( $self,$merchant_id ) = @_;
-    return $self->merchant( $merchant_id )->pre_authorizations;
+    my ( $self,%filters ) = @_;
+    return $self->merchant( $self->client->merchant_id )
+        ->pre_authorizations( \%filters );
 }
 
 =head1 Subscription
@@ -170,8 +173,9 @@ sub subscription {
 }
 
 sub subscriptions {
-    my ( $self,$merchant_id ) = @_;
-    return $self->merchant( $merchant_id )->subscriptions;
+    my ( $self,%filters ) = @_;
+    return $self->merchant( $self->client->merchant_id )
+        ->subscriptions( \%filters );
 }
 
 =head1 User
@@ -181,8 +185,9 @@ sub subscriptions {
 =cut
 
 sub users {
-    my ( $self,$merchant_id ) = @_;
-    return $self->merchant( $merchant_id )->users;
+    my ( $self,%filters ) = @_;
+    return $self->merchant( $self->client->merchant_id )
+        ->users( \%filters );
 }
 
 =head1 Common

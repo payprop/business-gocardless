@@ -128,6 +128,26 @@ sub test_bill {
         '->bills returns an array of Business::GoCardless::Bill objects'
     );
 
+    $i = 0;
+
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of bills
+            $i++
+                ? '[' . _bill_json( 'cancelled' ) . ']'
+                : _merchant_json()
+        }
+    );
+
+    my @bills = $GoCardless->bills( state => 'cancelled' );
+
+    cmp_deeply(
+        \@bills,
+        [ _bill_obj( 'cancelled' ) ],
+        '->bills with filters'
+    );
+
     $mock->mock( 'content',sub { _bill_json() } );
     $Bill = $GoCardless->bill( '123ABCD' );
 

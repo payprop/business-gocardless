@@ -43,18 +43,30 @@ sub BUILD {
     return $self;
 }
 
-sub bills              { shift->_list( 'bills','Bill' ) }
-sub pre_authorizations { shift->_list( 'pre_authorizations','PreAuthorization' )}
-sub subscriptions      { shift->_list( 'subscriptions','Subscription' ) }
-sub payouts            { shift->_list( 'payouts','Payout' ) }
-sub users              { shift->_list( 'users','User' ) }
+sub bills              { shift->_list( 'bills',shift ) }
+sub pre_authorizations { shift->_list( 'pre_authorizations',shift )}
+sub subscriptions      { shift->_list( 'subscriptions',shift ) }
+sub payouts            { shift->_list( 'payouts',shift ) }
+sub users              { shift->_list( 'users',shift ) }
 
 sub _list {
-    my ( $self,$endpoint,$class ) = @_;
+    my ( $self,$endpoint,$filters ) = @_;
 
-    my $data = $self->client->api_get(
-        sprintf( $self->endpoint,$self->id ) . "/$endpoint"
-    );
+    my $class = {
+        bills              => 'Bill',
+        pre_authorizations => 'PreAuthorization',
+        subscriptions      => 'Subscription',
+        payouts            => 'Payout',
+        users              => 'User',
+    }->{ $endpoint };
+
+    my $uri = sprintf( $self->endpoint,$self->id ) . "/$endpoint";
+
+    if ( keys( %{ $filters // {} } ) ) {
+        $uri .= '?' . $self->client->normalize_params( $filters );
+    }
+
+    my $data = $self->client->api_get( $uri );
 
     $class = "Business::GoCardless::$class";
     my @objects = map { $class->new( client => $self->client,%{ $_ } ) }
