@@ -5,6 +5,10 @@ with 'Business::GoCardless::Utils';
 with 'Business::GoCardless::Version';
 
 use Business::GoCardless::Exception;
+use Business::GoCardless::Bill;
+use Business::GoCardless::Merchant;
+use Business::GoCardless::Payout;
+use Business::GoCardless::Subscription;
 
 use Carp qw/ confess /;
 use POSIX qw/ strftime /;

@@ -10,7 +10,131 @@ Business::GoCardless
 
 =head1 DESCRIPTION
 
+Business::GoCardless is a library for easy interface to the gocardless
+payment service, it implements most of the functionality currently found
+in the service's API documentation: https://developer.gocardless.com
+
+Current missing functionality is partner account handling and webhooks, but
+all resource manipulation (Bill, Merchant, Payout etc) is handled along with
+the checking/generation of signature, nonce, param normalisation, and other
+such lower level interface with the API.
+
+Please note this library is in its early stages and is subject to change. An
+attempt has been made to write it in such a way as to make this unlikely - it
+borrows heavily from the official gocardless ruby library.
+
+B<You should refer to the official gocardless API documentation in conjunction>
+B<with this perldoc>, as the official API documentation explains in more depth>
+some of the functionality including required / optional parameters for certain
+methods.
+
 =head1 SYNOPSIS
+
+The following examples show instantiating the object and getting a resource (Bill in
+this case) to manipulate.
+
+    my $GoCardless = Business::GoCardless->new(
+        token           => $your_gocardless_token
+        client_details  => {
+            base_url    => $gocardless_url, # defaults to https://gocardless.com
+            app_id      => $your_gocardless_app_id,
+            app_secret  => $your_gocardless_app_secret,
+            merchant_id => $your_gocardless_merchant_id,
+        },
+    );
+
+    # get merchant details
+    my $Merchant = $GoCardless->merchant;
+
+    # create URL for a one off bill (https://developer.gocardless.com/#create-a-one-off-bill)
+    my $new_bill_url = $GoCardless->new_bill_url(
+        amount       => 100,
+        name         => "Some Bill",
+        description  => "Some Bill Description",
+        user         => $user_hash,
+        redirect_uri => "https://foo/success",
+        cancel_uri   => "https://foo/cancel",
+        state        => "some_state_data",
+    );
+
+    # having sent the user to the $new_bill_url and them having complete it,
+    # we need to confirm the resource using the details sent by gocardless to
+    # the redirect_uri (https://developer.gocardless.com/#confirm-a-new-one-off-bill)
+    my $Bill = $GoCardless->confirm_resource(
+        resource_uri  => $uri,
+        resource_type => 'bill', # in the above case
+        resource_id   => $bill_id,
+        signature     => $signature,
+        state         => "some_state_data",
+    );
+
+    # get a specfic Bill
+    $Bill = $GoCardless->bill( $id );
+
+    # cancel the bill
+    $Bill->cancel;
+
+    # too late? maybe we should refund instead
+    $Bill->refund;
+
+    # or maybe it failed?
+    $Bill->retry if $Bill->failed;
+
+    # get a list of Bill objects (filter optional: https://developer.gocardless.com/#filtering)
+    my @bills = $GoCardless->bills( %filter );
+
+    # on any resource object:
+    my %data = $Bill->to_hash;
+    my $json = $Bill->to_json;
+
+=head1 ERROR HANDLING
+
+Any problems or errors will result in a Business::GoCardless::Exception
+object being thrown, so you should wrap any calls to the library calls in
+the appropriate error catching code (TryCatch in the below example):
+
+    use TryCatch;
+
+    try {
+        my $Pager = $GoCardless->bills;
+
+        while( my @bills = $Pager->next ) {
+            foreach my $Bill ( @bills ) {
+                $Bill->cancel;
+            }
+        }
+    }
+    catch ( Business::GoCardless::Exception ) {
+        # error specific to Business::GoCardless
+        ...
+        say $e->message;  # error message
+        say $e->code;     # HTTP status code
+        say $e->response; # HTTP status message
+    }
+    catch ( $e ) {
+        # some other failure?
+        ...
+    }
+
+=head1 PAGINATION
+
+Any methods marked as B<pager> have a dual interface, when called in list context
+they will return the first 100 resource objects, when called in scalar context they
+will return a L<Business::GoCardless::Pagination> object allowing you to iterate
+through all the objects:
+
+    # get a list of L<Business::GoCardless::Bill> objects
+    # (filter optional: https://developer.gocardless.com/#filtering)
+    my @bills = $GoCardless->bills( %filter );
+
+    # or using the Business::GoCardless::Pagination object:
+    my $Pager = $GoCardless->bills;
+
+    while( my @bills = $Pager->next ) {
+        foreach my $Bill ( @bills ) {
+            ...
+        }
+    }
 
 =cut
 
@@ -19,15 +143,22 @@ with 'Business::GoCardless::Version';
 
 use Carp qw/ confess /;
 
-use Business::GoCardless::Bill;
 use Business::GoCardless::Client;
-use Business::GoCardless::Merchant;
-use Business::GoCardless::Payout;
-use Business::GoCardless::Subscription;
 
 =head1 ATTRIBUTES
 
 =head2 token
+
+Your gocardless API token.
+
+=head2 client_details
+
+Hash of gocardless client details:
+
+    base_url    => $gocardless_url, # defaults to https://gocardless.com
+    app_id      => $your_gocardless_app_id,
+    app_secret  => $your_gocardless_app_secret,
+    merchant_id => $your_gocardless_merchant_id,
 
 =cut
 
@@ -65,13 +196,53 @@ has client => (
     },
 );
 
-=head1 Bill
+=head1 Common Methods
+
+Methods not tied to any particular resource.
+
+=head2 confirm_resource
+
+Confirm a resource.
+
+    my $Bill = $GoCardless->confirm_resource(
+        resource_uri  => $uri,
+        resource_type => 'bill',
+        resource_id   => $bill_id,
+        signature     => $signature,
+        state         => "some_state_data",
+    );
+
+=cut
+
+sub confirm_resource {
+    my ( $self,%params ) = @_;
+    return $self->client->confirm_resource( \%params );
+}
+
+
+=head1 Bill Methods
+
+See L<Business::GoCardless::Bill> for more information on Bill operations.
 
 =head2 new_bill_url
 
+Create a URL for generating a one off bill:
+
+    my $new_bill_url = $GoCardless->new_bill_url(
+        amount => 100,
+    );
+
 =head2 bill
 
-=head2 bills
+Get a L<Business::GoCardless::Bill> object for a specific bill.
+
+    my $Bill = $GoCardless->bill( $id );
+
+=head2 bills (B<pager>)
+
+Get a list of Bill objects (%filter is optional).
+
+    my @bills = $GoCardless->bills( %filter );
 
 =cut
 
@@ -91,11 +262,21 @@ sub bills {
         ->bills( \%filters );
 }
 
-=head1 Merchant
+=head1 Merchant Methods
+
+See L<Business::GoCardless::Merchant> for more information on Merchant operations.
 
 =head2 merchant
 
-=head2 payouts
+Get object that represents you (Merchant)
+
+    my $Merchant = $GoCardless->merchant;
+
+=head2 payouts (B<pager>)
+
+Get a list of L<Business::GoCardless::Payout> objects.
+
+    my @payouts = $GoCardless->payouts;
 
 =cut
 
@@ -115,9 +296,15 @@ sub payouts {
         ->payouts( \%filters );
 }
 
-=head1 Payout
+=head1 Payout Methods
+
+See L<Business::GoCardless::Payout> for more information on Payout operations.
 
 =head2 payout
+
+Get a L<Business::GoCardless::Payout> object for a specific payout.
+
+    my $Payout = $GoCardless->payout( $id );
 
 =cut
 
@@ -126,13 +313,31 @@ sub payout {
     return $self->_generic_find_obj( $id,'Payout' );
 }
 
-=head1 PreAuthorization
+=head1 PreAuthorization Methods
+
+See L<Business::GoCardless::PreAuthorization> for more information on PreAuthorization operations.
 
 =head2 new_pre_authorization_url
 
+Create a URL for generating a pre_authorization.
+
+    my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
+        max_amount      => 100,
+        interval_length => 10,
+        interval_unit   => 'day',
+    );
+
 =head2 pre_authorization
 
-=head2 pre_authorizations
+Get a L<Business::GoCardless::PreAuthorization> object for a specific pre_authorization.
+
+    my $PreAuth = $GoCardless->pre_authorization( $id );
+
+=head2 pre_authorizations (B<pager>)
+
+Get a list of L<Business::GoCardless::PreAuthorization> objects.
+
+    my @pre_auths = $GoCardless->pre_authorizations;
 
 =cut
 
@@ -152,13 +357,31 @@ sub pre_authorizations {
         ->pre_authorizations( \%filters );
 }
 
-=head1 Subscription
+=head1 Subscription Methods
+
+See L<Business::GoCardless::Subscription> for more information on Subscription operations.
 
 =head2 new_subscription_url
 
+Create a URL for generating a subscription.
+
+    my $new_pre_auth_url = $GoCardless->new_subscription_url(
+        amount          => 100,
+        interval_length => 1,
+        interval_unit   => 'month',
+    );
+
 =head2 subscription
 
-=head2 subscriptions
+Get a L<Business::GoCardless::Subscription> object for a specific subscription.
+
+    my $Subscription = $GoCardless->subscription( $id );
+
+=head2 subscriptions (B<pager>)
+
+Get a list of L<Business::GoCardless::Subscription> objects.
+
+    my @subs = $GoCardless->subscriptions;
 
 =cut
 
@@ -178,9 +401,15 @@ sub subscriptions {
         ->subscriptions( \%filters );
 }
 
-=head1 User
+=head1 User Methods
 
-=head2 users
+See L<Business::GoCardless::User> for more information on User operations.
+
+=head2 users (B<pager>)
+
+Get a list of L<Business::GoCardless::User> objects.
+
+    my @users = $GoCardless->users;
 
 =cut
 
@@ -188,17 +417,6 @@ sub users {
     my ( $self,%filters ) = @_;
     return $self->merchant( $self->client->merchant_id )
         ->users( \%filters );
-}
-
-=head1 Common
-
-=head2 confirm_resource
-
-=cut
-
-sub confirm_resource {
-    my ( $self,%params ) = @_;
-    return $self->client->confirm_resource( \%params );
 }
 
 sub _generic_find_obj {
@@ -211,9 +429,29 @@ sub _generic_find_obj {
     return $obj->find_with_client;
 }
 
+=head1 SEE ALSO
+
+L<Business::GoCardless::Bill>
+
+L<Business::GoCardless::Client>
+
+L<Business::GoCardless::Merchant>
+
+L<Business::GoCardless::Payout>
+
+L<Business::GoCardless::Subscription>
+
+L<Business::GoCardless::User>
+
 =head1 AUTHOR
 
 Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
 
 =cut
 

@@ -48,11 +48,11 @@ my $GoCardless = Business::GoCardless->new(
 isa_ok( $GoCardless,'Business::GoCardless' );
 isa_ok( $GoCardless->merchant,'Business::GoCardless::Merchant' );
 
-my $new_url = $GoCardless->client->new_bill_url({
+my $new_url = $GoCardless->client->new_bill_url(
     amount       => 100,
     name         => 'Example payment',
     redirect_uri => "http://localhost:3000/merchants/$mid/confirm_resource",
-});
+);
 
 # TODO: maybe automate this
 diag "Visit and complete: $new_url";

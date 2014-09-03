@@ -5,6 +5,7 @@ use warnings;
 
 use Test::Most;
 use Test::Exception;
+use TryCatch;
 
 use_ok( 'Business::GoCardless::Exception' );
 
@@ -72,6 +73,41 @@ is(
     'The resource has already been confirmed',
     ' ... message coerced and available'
 );
+
+try {
+    Business::GoCardless::Exception->throw(
+        message => 'Boo!'
+    );
+}
+catch ( Business::GoCardless::Exception $e ) {
+    is( $e->message,'Boo!','TryCatch catches exceptions' );
+}
+
+try {
+    Business::GoCardless::Exception->throw(
+        message => 'Boo!',
+        code    => 400,
+    );
+}
+catch ( Business::GoCardless::Exception $e where { $_->code == 400 } ) {
+    is( $e->message,'Boo!','TryCatch catches exceptions with where' );
+}
+
+try {
+    Business::GoCardless::Exception->throw(
+        message => 'Boo!',
+        code    => 400,
+    );
+}
+catch ( Business::GoCardless::Exception $e where { $_->code != 400 } ) {
+    fail( "Exception caught in wrong block" );
+}
+catch ( Business::GoCardless::Exception $e ) {
+    is( $e->message,'Boo!','TryCatch default case' );
+}
+catch ( $e ) {
+    fail( "reached fall through in TryCatch" );
+}
 
 done_testing();
 
