@@ -6,6 +6,7 @@ use warnings;
 use Test::Most;
 use Test::Deep;
 use Test::MockObject;
+use Test::Exception;
 
 # soft requirements of Business::GoCardless::Client
 # "soft" in that they're not required => 1 but must
@@ -79,12 +80,32 @@ sub test_bill {
         '->new_bill_url returns a url'
     );
 
+    $ENV{GOCARDLESS_DEV_TESTING} = 0;
+    
+    throws_ok(
+        sub { $GoCardless->confirm_resource( signature => 'foo' ) },
+        'Business::GoCardless::Exception',
+        '->confirm_resource checks signature',
+    );
+
+    like(
+        $@->message,
+        qr/Invalid signature for confirm_resource/,
+        ' ... and throws expected error',
+    );
+
+    $ENV{GOCARDLESS_DEV_TESTING}    = 1;
+    $ENV{GOCARDLESS_SKIP_SIG_CHECK} = 1;
+
     $mock->mock( 'content',sub { _bill_json() } );
 
     cmp_deeply(
-        my $Bill = $GoCardless->confirm_bill( 'foo' ),
+        my $Bill = $GoCardless->confirm_resource(
+            resource_id   => 'foo',
+            resource_type => 'bill'
+        ),
         _bill_obj(),
-        '->confirm_bill returns a Business::GoCardless::Bill object'
+        '->confirm_resource returns a Business::GoCardless::Bill object'
     );
 
     my $i = 0;
@@ -211,9 +232,12 @@ sub test_pre_authorization {
 
     $mock->mock( 'content',sub { _pre_auth_json() } );
     cmp_deeply(
-        my $PreAuthorization = $GoCardless->confirm_pre_authorization( 'foo' ),
+        my $PreAuthorization = $GoCardless->confirm_resource(
+            resource_id   => 'foo',
+            resource_type => 'pre_authorization',
+        ),
         _pre_auth_obj(),
-        '->confirm_pre_authorization returns a Business::GoCardless::PreAuthorization object'
+        '->confirm_resource returns a Business::GoCardless::PreAuthorization object'
     );
 
     $mock->mock( 'content',sub { _bill_json() } );
@@ -295,9 +319,12 @@ sub test_subscription {
 
     $mock->mock( 'content',sub { _subscription_json() } );
     cmp_deeply(
-        my $PreAuthorization = $GoCardless->confirm_subscription( 'foo' ),
+        my $Subscription = $GoCardless->confirm_resource(
+            resource_id   => 'foo',
+            resource_type => 'subscription',
+        ),
         _subscription_obj(),
-        '->confirm_subscriptionorization returns a Business::GoCardless::Subscription object'
+        '->confirm_resource returns a Business::GoCardless::Subscription object'
     );
 
     my $i = 0;
@@ -321,7 +348,7 @@ sub test_subscription {
     );
 
     $mock->mock( 'content',sub { _subscription_json() } );
-    my $Subscription = $GoCardless->subscription( '123ABCD' );
+    $Subscription = $GoCardless->subscription( '123ABCD' );
 
     cmp_deeply(
         $Subscription,
@@ -345,6 +372,7 @@ sub test_user {
 
     my ( $GoCardless,$mock ) = @_;
 
+    note( "User" );
     my $i = 0;
 
     $mock->mock(
@@ -656,12 +684,13 @@ sub _merchant_obj {
 
 sub _bill_json {
 
-    my ( $status ) = @_;
+    my ( $status,$amount ) = @_;
 
     $status //= 'pending';
+    $amount //= '44.0';
 
     return qq{{
-  "amount": "44.0",
+  "amount": "$amount",
   "gocardless_fees": "0.44",
   "partner_fees": "0",
   "currency": "GBP",

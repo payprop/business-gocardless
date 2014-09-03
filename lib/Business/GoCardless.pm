@@ -69,8 +69,6 @@ has client => (
 
 =head2 new_bill_url
 
-=head2 confirm_bill
-
 =head2 bill
 
 =head2 bills
@@ -80,14 +78,6 @@ has client => (
 sub new_bill_url {
     my ( $self,%params ) = @_;
     return $self->client->new_bill_url( \%params );
-}
-
-sub confirm_bill {
-    my ( $self,$id ) = @_;
-    return $self->confirm_resource(
-        resource_id   => $id,
-        resource_type => 'bill',
-    );
 }
 
 sub bill {
@@ -138,8 +128,6 @@ sub payout {
 
 =head2 new_pre_authorization_url
 
-=head2 confirm_pre_authorization
-
 =head2 pre_authorization
 
 =head2 pre_authorizations
@@ -149,14 +137,6 @@ sub payout {
 sub new_pre_authorization_url {
     my ( $self,%params ) = @_;
     return $self->client->new_pre_authorization_url( \%params );
-}
-
-sub confirm_pre_authorization {
-    my ( $self,$id ) = @_;
-    return $self->confirm_resource(
-        resource_id   => $id,
-        resource_type => 'pre_authorization',
-    );
 }
 
 sub pre_authorization {
@@ -173,8 +153,6 @@ sub pre_authorizations {
 
 =head2 new_subscription_url
 
-=head2 confirm_subscription
-
 =head2 subscription
 
 =head2 subscriptions
@@ -186,14 +164,6 @@ sub new_subscription_url {
     return $self->client->new_subscription_url( \%params );
 }
 
-sub confirm_subscription {
-    my ( $self,$id ) = @_;
-    return $self->confirm_resource(
-        resource_id   => $id,
-        resource_type => 'subscription',
-    );
-}
-
 sub subscription {
     my ( $self,$id ) = @_;
     return $self->_generic_find_obj( $id,'Subscription' );
@@ -203,7 +173,6 @@ sub subscriptions {
     my ( $self,$merchant_id ) = @_;
     return $self->merchant( $merchant_id )->subscriptions;
 }
-
 
 =head1 User
 

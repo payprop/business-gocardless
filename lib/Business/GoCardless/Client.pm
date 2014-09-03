@@ -94,11 +94,11 @@ sub new_limit_url {
 sub confirm_resource {
     my ( $self,$params ) = @_;
 
-#    if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
-#        Business::GoCardless::Exception->throw({
-#            message => "Invalid signature for confirm_resource"
-#        });
-#    }
+    if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
+        Business::GoCardless::Exception->throw({
+            message => "Invalid signature for confirm_resource"
+        });
+    }
 
     my $data = {
         resource_id   => $params->{resource_id},

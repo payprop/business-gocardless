@@ -37,13 +37,15 @@ sub find_with_client {
 }
 
 sub _operation {
-    my ( $self,$verb,$method,$params ) = @_;
+    my ( $self,$operation,$method,$params ) = @_;
 
     $method //= 'api_post',
-    my $data = $self->client->$method(
-        sprintf( $self->endpoint,$self->id ) . "/$verb",
-        $params
-    );
+
+    my $uri = $operation
+        ? sprintf( $self->endpoint,$self->id ) . "/$operation"
+        : sprintf( $self->endpoint,$self->id );
+
+    my $data = $self->client->$method( $uri,$params );
 
     foreach my $attr ( keys( %{ $data } ) ) {
         $self->$attr( $data->{$attr} );

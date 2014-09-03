@@ -11,3 +11,4 @@
 *.swp
 ~$
 /Business-GoCardless*tar.gz
+t/end_to_end/*.json

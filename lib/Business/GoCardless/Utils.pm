@@ -17,6 +17,9 @@ sub sign_params {
 sub signature_valid {
     my ( $self,$params,$app_secret ) = @_;
 
+    # for testing, use live at your own risk
+    return 1 if $ENV{GOCARDLESS_SKIP_SIG_CHECK};
+
     # delete local is 5.12+ only so need to copy hash here
     my $params_copy = { %{ $params } };
     my $sig = delete( $params_copy->{signature} );
