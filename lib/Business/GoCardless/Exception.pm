@@ -1,7 +1,7 @@
 package Business::GoCardless::Exception;
 
 use Moo;
-use JSON;
+use JSON ();
 use Carp qw/ cluck /;
 
 with 'Throwable';

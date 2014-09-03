@@ -10,7 +10,7 @@ use Carp qw/ confess /;
 use POSIX qw/ strftime /;
 use MIME::Base64 qw/ encode_base64 /;
 use LWP::UserAgent;
-use JSON;
+use JSON ();
 
 has token => (
     is       => 'ro',

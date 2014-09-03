@@ -2,12 +2,18 @@ package Business::GoCardless::Resource;
 
 use Moo;
 use Business::GoCardless::Exception;
+use Carp qw/ confess /;
+use JSON ();
 
 has endpoint => (
     is       => 'ro',
     default  => sub {
         my ( $self ) = @_;
         my ( $class ) = ( split( ':',ref( $self ) ) )[-1];
+
+        confess( "You must subclass Business::GoCardless::Resource" )
+            if $class eq 'Resource';
+
         $class =~ s/([a-z])([A-Z])/$1 . '_' . lc( $2 )/eg;
         $class = lc( $class );
         return "/${class}s/%s";
@@ -52,6 +58,19 @@ sub _operation {
     }
 
     return $self;
+}
+
+sub to_hash {
+    my ( $self ) = @_;
+
+    my %hash = %{ $self };
+    delete( $hash{client} );
+    return %hash;
+}
+
+sub to_json {
+    my ( $self ) = @_;
+    return JSON->new->canonical->encode( { $self->to_hash } );
 }
 
 1;

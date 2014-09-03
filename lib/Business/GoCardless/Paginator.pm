@@ -2,7 +2,7 @@ package Business::GoCardless::Paginator;
 
 use Moo;
 extends 'Business::GoCardless::Resource';
-use JSON;
+use JSON ();
 
 use Business::GoCardless::Bill;
 use Business::GoCardless::PreAuthorization;
