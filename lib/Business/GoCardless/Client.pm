@@ -2,6 +2,8 @@ package Business::GoCardless::Client;
 
 use Moo;
 with 'Business::GoCardless::Utils';
+with 'Business::GoCardless::Version';
+
 use Business::GoCardless::Exception;
 
 use Carp qw/ confess /;
@@ -24,7 +26,7 @@ has base_url => (
 has api_path => (
     is       => 'ro',
     required => 0,
-    default  => sub { '/api/v1' },
+    default  => sub { '/api/' . $Business::GoCardless::API_VERSION },
 );
 
 has app_id => (
@@ -177,7 +179,9 @@ sub api_request {
     $ua->agent( $self->_user_agent );
 
     my $req = HTTP::Request->new(
-        $method => join( '/',$self->base_url . $self->api_path . $path ),
+        # passing through the absolute URL means we don't build it
+        $method => $path =~ /^http/
+            ? $path : join( '/',$self->base_url . $self->api_path . $path ),
     );
 
     $req->header( 'Authorization' => "bearer " . $self->token );
@@ -191,7 +195,10 @@ sub api_request {
     my $res = $ua->request( $req );
 
     if ( $res->is_success ) {
-        return JSON->new->decode( $res->content );
+        my $data  = JSON->new->decode( $res->content );
+        my $links = $res->header( 'link' );
+        my $info  = $res->header( 'x-pagination' );
+        return wantarray ? ( $data,$links,$info ) : $data;
     }
     else {
         Business::GoCardless::Exception->throw({

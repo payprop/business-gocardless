@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME             => 'Business::GoCardless',
-    VERSION_FROM     => 'lib/Business/GoCardless.pm',
+    VERSION_FROM     => 'lib/Business/GoCardless/Version.pm',
     AUTHOR           => 'Lee Johnson <leejo@cpan.org>',
     LICENSE          => 'perl',
     MIN_PERL_VERSION => '5.10.1',

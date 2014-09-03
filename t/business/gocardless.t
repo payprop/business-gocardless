@@ -48,6 +48,7 @@ no warnings 'redefine';
 no warnings 'once';
 my $mock = Test::MockObject->new;
 $mock->mock( 'is_success',sub { 1 } );
+$mock->mock( 'header',sub {} );
 *LWP::UserAgent::request = sub { $mock };
 
 test_bill( $GoCardless,$mock );
@@ -140,7 +141,7 @@ sub test_bill {
         }
     );
 
-    my @bills = $GoCardless->bills( state => 'cancelled' );
+    @bills = $GoCardless->bills( state => 'cancelled' );
 
     cmp_deeply(
         \@bills,

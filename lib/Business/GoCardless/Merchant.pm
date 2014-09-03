@@ -7,6 +7,7 @@ use Business::GoCardless::Bill;
 use Business::GoCardless::PreAuthorization;
 use Business::GoCardless::Payout;
 use Business::GoCardless::User;
+use Business::GoCardless::Paginator;
 
 has [ qw/
     balance
@@ -60,19 +61,29 @@ sub _list {
         users              => 'User',
     }->{ $endpoint };
 
+    $filters             //= {};
+    $filters->{per_page} ||= 100;
+    $filters->{page}     ||= 1;
+
     my $uri = sprintf( $self->endpoint,$self->id ) . "/$endpoint";
 
-    if ( keys( %{ $filters // {} } ) ) {
+    if ( keys( %{ $filters } ) ) {
         $uri .= '?' . $self->client->normalize_params( $filters );
     }
 
-    my $data = $self->client->api_get( $uri );
+    my ( $data,$links,$info ) = $self->client->api_get( $uri );
 
     $class = "Business::GoCardless::$class";
     my @objects = map { $class->new( client => $self->client,%{ $_ } ) }
         @{ $data };
 
-    return @objects;
+    return wantarray ? ( @objects ) : Business::GoCardless::Paginator->new(
+        class   => $class,
+        client  => $self->client,
+        links   => $links,
+        info    => $info ? JSON->new->decode( $info ) : {},
+        objects => \@objects,
+    );
 }
 
 1;

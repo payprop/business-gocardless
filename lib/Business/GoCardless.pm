@@ -1,7 +1,5 @@
 package Business::GoCardless;
 
-$Business::GoCardless::VERSION = '0.01_01';
-
 =head1 NAME
 
 Business::GoCardless
@@ -17,6 +15,8 @@ Business::GoCardless
 =cut
 
 use Moo;
+with 'Business::GoCardless::Version';
+
 use Carp qw/ confess /;
 
 use Business::GoCardless::Bill;

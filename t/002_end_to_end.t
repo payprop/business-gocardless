@@ -68,9 +68,16 @@ my $NewBill = $GoCardless->bill( $Bill->id );
 is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
 =cut
 
-my @bills = $GoCardless->bills( status => 'cancelled' );
-note scalar( @bills );
-note explain [ map { $_->id } @bills ];
+my $Paginator = $GoCardless->bills(
+    per_page => 5,
+);
+
+note explain $Paginator->info;
+
+while ( my @bills = $Paginator->next ) {
+    note scalar( @bills );
+    note explain [ map { $_->id } @bills ];
+}
 
 done_testing();
 
