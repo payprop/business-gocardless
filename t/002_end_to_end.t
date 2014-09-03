@@ -9,6 +9,7 @@ use Test::Exception;
 use LWP::Simple;
 use Business::GoCardless;
 use Mojo::JSON qw/ decode_json /;
+use POSIX qw/ strftime /;
 
 use FindBin qw/ $Bin /;
 my $tmp_dir = "$Bin/end_to_end";
@@ -45,8 +46,8 @@ my $GoCardless = Business::GoCardless->new(
 );
 
 isa_ok( $GoCardless,'Business::GoCardless' );
+isa_ok( $GoCardless->merchant,'Business::GoCardless::Merchant' );
 
-=cut
 my $new_url = $GoCardless->client->new_bill_url({
     amount       => 100,
     name         => 'Example payment',
@@ -66,7 +67,6 @@ ok( $Bill->cancelled,'bill cancelled' );
 
 my $NewBill = $GoCardless->bill( $Bill->id );
 is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
-=cut
 
 my $Paginator = $GoCardless->bills(
     per_page => 5,
@@ -78,6 +78,58 @@ while ( my @bills = $Paginator->next ) {
     note scalar( @bills );
     note explain [ map { $_->id } @bills ];
 }
+
+my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
+    max_amount         => 100,
+    interval_length    => 10,
+    interval_unit      => 'day',
+    expires_at         => '2020-01-01',
+    name               => "Test PreAuthorization",
+    description        => "Test PreAuthorization for testing",
+);
+
+diag "Visit and complete: $new_pre_auth_url";
+$confirm_resource_data = _get_confirm_resource_data(
+    "$tmp_dir/pre_authorization.json"
+);
+isa_ok(
+    my $PreAuthorization = $GoCardless->client->confirm_resource(
+        $confirm_resource_data
+    ),
+    'Business::GoCardless::PreAuthorization'
+);
+
+$Bill = $PreAuthorization->bill( amount => 100 );
+$PreAuthorization->cancel;
+$GoCardless->pre_authorizations;
+
+my $new_subscription_url = $GoCardless->new_subscription_url(
+    amount             => 100,
+    interval_length    => 10,
+    interval_unit      => 'day',
+    name               => "Test Subscription",
+    description        => "Test Subscription for testing",
+    start_at           => strftime( "%Y-12-31",gmtime ),
+);
+
+diag "Visit and complete: $new_subscription_url";
+$confirm_resource_data = _get_confirm_resource_data(
+    "$tmp_dir/subscription.json"
+);
+
+isa_ok(
+    my $Subscription = $GoCardless->client->confirm_resource(
+        $confirm_resource_data
+    ),
+    'Business::GoCardless::Subscription'
+);
+
+$Subscription = $GoCardless->subscription( $Subscription->id );
+$Subscription->cancel;
+
+my @users = $GoCardless->users;
+my $User = $users[0];
+isa_ok( $User,'Business::GoCardless::User' );
 
 done_testing();
 

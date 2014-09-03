@@ -21,6 +21,7 @@ has [ qw/
     remaining_amount
     setup_fee
     status
+    sub_resource_uris
     uri
     user_id
 / ] => (

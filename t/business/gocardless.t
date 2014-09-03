@@ -230,7 +230,7 @@ sub test_pre_authorization {
 
     note( "PreAuthorization" );
     like(
-        my $new_bill_url = $GoCardless->new_pre_authorization_url(
+        my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
             max_amount         => 100,
             interval_length    => 10,
             interval_unit      => 'day',
@@ -468,7 +468,11 @@ sub _subscription_json {
   "setup_fee": "0.00",
   "interval_unit": "month",
   "interval_length": "1",
+  "start_at": "2014-12-31T00:00:00Z",
   "status": "$status",
+  "sub_resource_uris": {
+    "bills": "https://sandbox.gocardless.com/api/v1/merchants/0HMARBD8H1/bills?source_id=0PWCDRPCWN"
+  },
   "next_interval_start": "2014-09-20T00:00:00Z",
   "merchant_id": "06Z06JWQW1",
   "user_id": "FIVWCCVEST6S4D",
@@ -505,7 +509,11 @@ sub _subscription_obj {
    'name' => 'Membership subscription',
    'next_interval_start' => '2014-09-20T00:00:00Z',
    'setup_fee' => '0.00',
+   'start_at' => '2014-12-31T00:00:00Z',
    'status' => $status,
+   'sub_resource_uris' => {
+     'bills' => 'https://sandbox.gocardless.com/api/v1/merchants/0HMARBD8H1/bills?source_id=0PWCDRPCWN'
+   },
    'uri' => 'https://gocardless.com/api/v1/subscriptions/0NZ71WBMVF',
    'user_id' => 'FIVWCCVEST6S4D'
 }, 'Business::GoCardless::Subscription' );
@@ -542,6 +550,9 @@ sub _pre_auth_obj {
   'remaining_amount' => '750.00',
   'setup_fee' => '10.00',
   'status' => $status,
+  'sub_resource_uris' => {
+    'bills' => 'https://sandbox.gocardless.com/api/v1/merchants/0HMARBD8H1/bills?source_id=0PWCDRPCWN'
+  },
   'uri' => 'https://gocardless.com/api/v1/pre-authorisations/1234ABCD',
   'user_id' => 'FIVWCCVEST6S4D'
 }, 'Business::GoCardless::PreAuthorization' );
@@ -567,6 +578,9 @@ sub _pre_auth_json {
   "interval_unit": "month",
   "interval_length": "1",
   "status": "$status",
+  "sub_resource_uris": {
+    "bills": "https://sandbox.gocardless.com/api/v1/merchants/0HMARBD8H1/bills?source_id=0PWCDRPCWN"
+  },
   "next_interval_start": "2014-09-20T00:00:00Z",
   "merchant_id": "06Z06JWQW1",
   "user_id": "FIVWCCVEST6S4D",

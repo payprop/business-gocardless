@@ -18,7 +18,9 @@ has [ qw/
     name
     next_interval_start
     setup_fee
+    start_at
     status
+    sub_resource_uris
     uri
     user_id
 / ] => (
