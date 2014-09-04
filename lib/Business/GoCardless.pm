@@ -6,7 +6,7 @@ Business::GoCardless
 
 =head1 VERSION
 
-0.01_01
+0.01
 
 =head1 DESCRIPTION
 
