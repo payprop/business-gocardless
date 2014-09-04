@@ -1,6 +1,7 @@
 # NAME
 
-Business::GoCardless
+Business::GoCardless - Perl library for interacting with the GoCardless API
+(https://gocardless.com)
 
 # VERSION
 
