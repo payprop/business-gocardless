@@ -1,5 +1,15 @@
 package Business::GoCardless::Paginator;
 
+=head1 NAME
+
+Business::GoCardless::Paginator
+
+=head1 DESCRIPTION
+
+A class for pagination through gocardless data returned as a list.
+
+=cut
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 use JSON ();
@@ -9,6 +19,16 @@ use Business::GoCardless::PreAuthorization;
 use Business::GoCardless::Payout;
 use Business::GoCardless::User;
 use Business::GoCardless::Paginator;
+
+=head1 ATTRIBUTES
+
+    client
+    objects
+    class
+    info
+    links
+
+=cut
 
 has [ qw/
     client
@@ -54,6 +74,19 @@ has links => (
         return $links_hash;
     },
 );
+
+=head1 PAGER METHODS
+
+    next
+    previous
+    first
+    last
+
+Return the objects from the next/previous/first/last page:
+
+    my @objects = $Paginator->next;
+
+=cut
 
 sub next {
     my ( $self ) = @_;
@@ -102,5 +135,17 @@ sub _objects_from_page {
 
     return [];
 }
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
+
+=cut
 
 1;

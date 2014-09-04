@@ -24,14 +24,16 @@ attempt has been made to write it in such a way as to make this unlikely - it
 borrows heavily from the official gocardless ruby library.
 
 B<You should refer to the official gocardless API documentation in conjunction>
-B<with this perldoc>, as the official API documentation explains in more depth>
+B<with this perldoc>, as the official API documentation explains in more depth
 some of the functionality including required / optional parameters for certain
 methods.
 
 =head1 SYNOPSIS
 
-The following examples show instantiating the object and getting a resource (Bill in
-this case) to manipulate.
+The following examples show instantiating the object and getting a resource
+(Bill in this case) to manipulate. For more examples see the t/002_end_to_end.t
+script, which can be run against the gocardless sandbox (or even live) endpoint
+when given the necessary ENV variables.
 
     my $GoCardless = Business::GoCardless->new(
         token           => $your_gocardless_token
@@ -90,8 +92,8 @@ this case) to manipulate.
 =head1 ERROR HANDLING
 
 Any problems or errors will result in a Business::GoCardless::Exception
-object being thrown, so you should wrap any calls to the library calls in
-the appropriate error catching code (TryCatch in the below example):
+object being thrown, so you should wrap any calls to the library in the
+appropriate error catching code (TryCatch in the below example):
 
     use TryCatch;
 
@@ -149,16 +151,20 @@ use Business::GoCardless::Client;
 
 =head2 token
 
-Your gocardless API token.
+Your gocardless API token, this attribute is required.
 
 =head2 client_details
 
-Hash of gocardless client details:
+Hash of gocardless client details, passed to L<Business::GoCardless::Client>.
 
     base_url    => $gocardless_url, # defaults to https://gocardless.com
     app_id      => $your_gocardless_app_id,
     app_secret  => $your_gocardless_app_secret,
     merchant_id => $your_gocardless_merchant_id,
+
+=head2 client
+
+The client object, defaults to L<Business::GoCardless::Client>.
 
 =cut
 
@@ -216,9 +222,8 @@ Confirm a resource.
 
 sub confirm_resource {
     my ( $self,%params ) = @_;
-    return $self->client->confirm_resource( \%params );
+    return $self->client->_confirm_resource( \%params );
 }
-
 
 =head1 Bill Methods
 
@@ -248,7 +253,7 @@ Get a list of Bill objects (%filter is optional).
 
 sub new_bill_url {
     my ( $self,%params ) = @_;
-    return $self->client->new_bill_url( \%params );
+    return $self->client->_new_bill_url( \%params );
 }
 
 sub bill {
@@ -343,7 +348,7 @@ Get a list of L<Business::GoCardless::PreAuthorization> objects.
 
 sub new_pre_authorization_url {
     my ( $self,%params ) = @_;
-    return $self->client->new_pre_authorization_url( \%params );
+    return $self->client->_new_pre_authorization_url( \%params );
 }
 
 sub pre_authorization {
@@ -387,7 +392,7 @@ Get a list of L<Business::GoCardless::Subscription> objects.
 
 sub new_subscription_url {
     my ( $self,%params ) = @_;
-    return $self->client->new_subscription_url( \%params );
+    return $self->client->_new_subscription_url( \%params );
 }
 
 sub subscription {
@@ -430,6 +435,8 @@ sub _generic_find_obj {
 }
 
 =head1 SEE ALSO
+
+L<Business::GoCardless::Resource>
 
 L<Business::GoCardless::Bill>
 

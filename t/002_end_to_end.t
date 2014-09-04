@@ -24,7 +24,7 @@ plan skip_all => "GOCARDLESS_ENDTOEND required"
 # this script (hence "end to end")
 my ( $token,$url,$app_id,$app_secret,$mid ) = @ENV{qw/
     GOCARDLESS_TOKEN
-    GOCARDLESS_TEST_URL
+    GOCARDLESS_URL
     GOCARDLESS_APP_ID
     GOCARDLESS_APP_SECRET
     GOCARDLESS_MERCHANT_ID
@@ -37,6 +37,8 @@ $ENV{GOCARDLESS_DEV_TESTING} = 1;
 
 my $GoCardless = Business::GoCardless->new(
     token           => $token,
+    # since these are set in %ENV we don't need to pass them
+    # but am showing them being passed here for example usage
     client_details  => {
         base_url    => $url,
         app_id      => $app_id,
@@ -48,7 +50,7 @@ my $GoCardless = Business::GoCardless->new(
 isa_ok( $GoCardless,'Business::GoCardless' );
 isa_ok( $GoCardless->merchant,'Business::GoCardless::Merchant' );
 
-my $new_url = $GoCardless->client->new_bill_url(
+my $new_url = $GoCardless->new_bill_url(
     amount       => 100,
     name         => 'Example payment',
     redirect_uri => "http://localhost:3000/merchants/$mid/confirm_resource",

@@ -26,8 +26,6 @@ can_ok(
         app_id
         app_secret
         merchant_id
-        new_bill_url
-        new_limit_url
     /,
 );
 

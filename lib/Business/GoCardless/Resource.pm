@@ -1,9 +1,35 @@
 package Business::GoCardless::Resource;
 
+=head1 NAME
+
+Business::GoCardless::Resource
+
+=head1 DESCRIPTION
+
+This is a base class for gocardless resource classes, it implements common
+behaviour. You shouldn't use this class directly, but extend it instead.
+
+=cut
+
 use Moo;
 use Business::GoCardless::Exception;
 use Carp qw/ confess /;
 use JSON ();
+
+=head1 ATTRIBUTES
+
+=head2 endpoint
+
+The gocardless API endpoint that corresponds to the resource, for example a
+L<Business::GoCardless::Bill> object will have an endpoint of "bills". This
+is handled automatically, you do not need to pass this unless the name of the
+resource differs significantly from the endpoint.
+
+=head2 client
+
+The client object, defaults to L<Business::GoCardless::Client>.
+
+=cut
 
 has endpoint => (
     is       => 'ro',
@@ -28,6 +54,17 @@ has client => (
     },
     required => 1,
 );
+
+=head1 METHODS
+
+=head2 find_with_client
+
+Calls the gocardless API and populates the resource object with the data.
+
+    my $Bill = Business::GoCardless::Bill->new( client => $self->client );
+    $Bill->find_with_client;
+
+=cut
 
 sub find_with_client {
     my ( $self ) = @_;
@@ -60,6 +97,20 @@ sub _operation {
     return $self;
 }
 
+=head2 to_hash
+
+Returns a hash representation of the object.
+
+    my %data = $Bill->to_hash;
+
+=head2 to_json
+
+Returns a json string representation of the object.
+
+    my $json = $Bill->to_json;
+
+=cut
+
 sub to_hash {
     my ( $self ) = @_;
 
@@ -72,6 +123,18 @@ sub to_json {
     my ( $self ) = @_;
     return JSON->new->canonical->encode( { $self->to_hash } );
 }
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
+
+=cut
 
 1;
 

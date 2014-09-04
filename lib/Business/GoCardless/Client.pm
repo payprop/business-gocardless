@@ -1,5 +1,16 @@
 package Business::GoCardless::Client;
 
+=head1 NAME
+
+Business::GoCardless::Client
+
+=head1 DESCRIPTION
+
+This is a class for the lower level requests to the gocardless API. generally
+there is nothing you should be doing with this.
+
+=cut
+
 use Moo;
 with 'Business::GoCardless::Utils';
 with 'Business::GoCardless::Version';
@@ -16,6 +27,43 @@ use MIME::Base64 qw/ encode_base64 /;
 use LWP::UserAgent;
 use JSON ();
 
+=head1 ATTRIBUTES
+
+=head2 token
+
+Your gocardless API token, this attribute is required.
+
+=head2 base_url
+
+The gocardless API URL, defaults to $ENV{GOCARDLESS_URL} or
+https://gocardless.com.
+
+=head2 api_path
+
+The gocardless API path, defaults to /api/v1.
+
+=head2 app_id
+
+Your gocardless app identifier, defaults to $ENV{GOCARDLESS_APP_ID} or will
+exit if not set.
+
+=head2 app_secret
+
+Your gocardless app secret, defaults to $ENV{GOCARDLESS_APP_SECRET} or will
+exit if not set.
+
+=head2 merchant_id
+
+Your gocardless merchant identifier, defaults to $ENV{GOCARDLESS_MERCHANT_ID}
+or will exit if not set.
+
+=head2 user_agent
+
+The user agent string used in requests to the gocardless API, defaults to
+business-gocardless/perl/v . $version_of_this_library.
+
+=cut
+
 has token => (
     is       => 'ro',
     required => 1,
@@ -24,7 +72,9 @@ has token => (
 has base_url => (
     is       => 'ro',
     required => 0,
-    default  => sub { 'https://gocardless.com' },
+    default  => sub {
+        $ENV{GOCARDLESS_URL} || 'https://gocardless.com';
+    },
 );
 
 has api_path => (
@@ -57,22 +107,33 @@ has merchant_id => (
     }
 );
 
-sub new_bill_url {
+has user_agent => (
+    is      => 'ro',
+    default => sub {
+        # probably want more infoin here, version of perl, platform, and such
+        return "business-gocardless/perl/v" . $Business::GoCardless::VERSION;
+    }
+);
+
+# making these methods "private" to prevent confusion with the
+# public methods of the same name in Business::GoCardless
+
+sub _new_bill_url {
     my ( $self,$params ) = @_;
-    return $self->new_limit_url( 'bill',$params );
+    return $self->_new_limit_url( 'bill',$params );
 }
 
-sub new_pre_authorization_url {
+sub _new_pre_authorization_url {
     my ( $self,$params ) = @_;
-    return $self->new_limit_url( 'pre_authorization',$params );
+    return $self->_new_limit_url( 'pre_authorization',$params );
 }
 
-sub new_subscription_url {
+sub _new_subscription_url {
     my ( $self,$params ) = @_;
-    return $self->new_limit_url( 'subscription',$params );
+    return $self->_new_limit_url( 'subscription',$params );
 }
 
-sub new_limit_url {
+sub _new_limit_url {
     my ( $self,$type,$limit_params ) = @_;
 
     $limit_params->{merchant_id} = $self->merchant_id;
@@ -97,7 +158,7 @@ sub new_limit_url {
     );
 }
 
-sub confirm_resource {
+sub _confirm_resource {
     my ( $self,$params ) = @_;
 
     if ( ! $self->signature_valid( $params,$self->app_secret ) ) {
@@ -115,7 +176,7 @@ sub confirm_resource {
     $credentials    =~ s/\s//g;
 
     my $ua = LWP::UserAgent->new;
-    $ua->agent( $self->_user_agent );
+    $ua->agent( $self->user_agent );
 
     my $req = HTTP::Request->new(
         POST => join( '/',$self->base_url . $self->api_path,'confirm' )
@@ -149,38 +210,42 @@ sub confirm_resource {
     }
 }
 
-sub _user_agent {
-    my ( $self ) = @_;
+=head1 METHODS
 
-    # probably want more infoin here, version of perl, platform, and such
-    return "business-gocardless/perl/v" . $Business::GoCardless::VERSION;
-}
+    api_get
+    api_post
+    api_put
+
+Make a request to the gocardless API:
+
+    my $data = $Client->api_get( '/merchants/123ABCD/bills',\%params );
+
+In list context returns the links and pagination headers:
+
+    my ( $data,$links,$info ) = $Client->api_get( ... );
+
+=cut
 
 sub api_get {
     my ( $self,$path,$params ) = @_;
-    return $self->api_request( 'GET',$path,$params );
+    return $self->_api_request( 'GET',$path,$params );
 }
 
 sub api_post {
     my ( $self,$path,$params ) = @_;
-    return $self->api_request( 'POST',$path,$params );
+    return $self->_api_request( 'POST',$path,$params );
 }
 
 sub api_put {
     my ( $self,$path,$params ) = @_;
-    return $self->api_request( 'PUT',$path,$params );
+    return $self->_api_request( 'PUT',$path,$params );
 }
 
-sub api_delete {
-    my ( $self,$path,$params ) = @_;
-    return $self->api_request( 'DELETE',$path,$params );
-}
-
-sub api_request {
+sub _api_request {
     my ( $self,$method,$path,$params ) = @_;
 
     my $ua = LWP::UserAgent->new;
-    $ua->agent( $self->_user_agent );
+    $ua->agent( $self->user_agent );
 
     my $req = HTTP::Request->new(
         # passing through the absolute URL means we don't build it
@@ -212,6 +277,18 @@ sub api_request {
         });
     }
 }
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
+
+=cut
 
 1;
 

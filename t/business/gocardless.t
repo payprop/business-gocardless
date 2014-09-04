@@ -432,14 +432,7 @@ sub _user_json {
 sub _user_obj {
 
     return bless( {
-   'client' => bless( {
-     'api_path' => '/api/v1',
-     'app_id' => 'foo',
-     'app_secret' => 'bar',
-     'base_url' => 'https://gocardless.com',
-     'merchant_id' => 'baz',
-     'token' => 'MvYX0i6snRh/1PXfPoc6'
-   }, 'Business::GoCardless::Client' ),
+   'client' => ignore(),
    'created_at' => '2011-11-18T17:06:15Z',
    'email' => 'customer40@gocardless.com',
    'endpoint' => '/users/%s',
@@ -489,14 +482,7 @@ sub _subscription_obj {
 
     return bless( {
    'amount' => '7.50',
-   'client' => bless( {
-     'api_path' => '/api/v1',
-     'app_id' => 'foo',
-     'app_secret' => 'bar',
-     'base_url' => 'https://gocardless.com',
-     'merchant_id' => 'baz',
-     'token' => 'MvYX0i6snRh/1PXfPoc6'
-   }, 'Business::GoCardless::Client' ),
+   'client' => ignore(),
    'created_at' => '2014-08-20T21:41:25Z',
    'currency' => 'GBP',
    'description' => 'GoCardless magazine',
@@ -527,14 +513,7 @@ sub _pre_auth_obj {
     $status //= 'active';
 
     return bless( {
-  'client' => bless( {
-    'api_path' => '/api/v1',
-    'app_id' => 'foo',
-    'app_secret' => 'bar',
-    'base_url' => 'https://gocardless.com',
-    'merchant_id' => 'baz',
-    'token' => 'MvYX0i6snRh/1PXfPoc6'
-  }, 'Business::GoCardless::Client' ),
+  'client' => ignore(),
   'created_at' => '2014-08-20T21:41:25Z',
   'currency' => 'GBP',
   'description' => 'GoCardless magazine',
@@ -624,14 +603,7 @@ sub _payout_obj {
      %{ $extra },
      'amount' => '12.37',
      'bank_reference' => 'JOHNSMITH-Z5DRM',
-     'client' => bless( {
-       'api_path' => '/api/v1',
-       'app_id' => 'foo',
-       'app_secret' => 'bar',
-       'base_url' => 'https://gocardless.com',
-       'merchant_id' => 'baz',
-       'token' => 'MvYX0i6snRh/1PXfPoc6'
-     }, 'Business::GoCardless::Client' ),
+     'client' => ignore(),
      'created_at' => '2013-05-10T16:34:34Z',
      'endpoint' => '/payouts/%s',
      'id' => '0BKR1AZNJF',
@@ -675,17 +647,7 @@ sub _merchant_obj {
     return bless(
         {
             'balance' => '0.0',
-            'client'  => bless(
-                {
-                    'api_path'    => '/api/v1',
-                    'app_id'      => 'foo',
-                    'app_secret'  => 'bar',
-                    'base_url'    => 'https://gocardless.com',
-                    'merchant_id' => 'baz',
-                    'token'       => 'MvYX0i6snRh/1PXfPoc6'
-                },
-                'Business::GoCardless::Client'
-            ),
+            'client' => ignore(),
             'created_at'           => '2014-01-22T10:27:42Z',
             'description'          => 'We do stuff.',
             'email'                => 'lee@foo.com',
@@ -760,17 +722,7 @@ sub _bill_obj {
             'JSON::PP::Boolean'
         ),
         'charge_customer_at' => '2014-09-01',
-        'client'             => bless(
-            {
-                'api_path'    => '/api/v1',
-                'app_id'      => 'foo',
-                'app_secret'  => 'bar',
-                'base_url'    => 'https://gocardless.com',
-                'merchant_id' => 'baz',
-                'token'       => 'MvYX0i6snRh/1PXfPoc6'
-            },
-            'Business::GoCardless::Client'
-        ),
+        'client' => ignore(),
         'created_at'      => '2014-08-20T21:41:25Z',
         'currency'        => 'GBP',
         'description'     => 'Month 2 payment',

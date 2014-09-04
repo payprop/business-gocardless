@@ -1,10 +1,37 @@
 package Business::GoCardless::Exception;
 
+=head1 NAME
+
+Business::GoCardless::Exception
+
+=head1 DESCRIPTION
+
+Exception handling for the Business::GoCardless modules, uses the Throwable
+module.
+
+=cut
+
 use Moo;
 use JSON ();
 use Carp qw/ cluck /;
 
 with 'Throwable';
+
+=head1 ATTRIBUTES
+
+=head2 message
+
+The error message, if JSON is passed this will be coerced to a string.
+
+=head2 code
+
+The error code, generally the HTTP status code.
+
+=head2 response
+
+The error response, generally the HTTP response.
+
+=cut
 
 # plain string or JSON
 has message => (
@@ -32,9 +59,6 @@ has message => (
     },
 );
 
-# compatibility with ruby lib
-sub description { shift->message }
-
 # generally the HTTP status code
 has code => (
     is       => 'ro',
@@ -46,6 +70,29 @@ has response => (
     is       => 'ro',
     required => 0,
 );
+
+=head1 METHODS
+
+=head2 description
+
+An alias to the message attribute.
+
+=cut
+
+# compatibility with ruby lib
+sub description { shift->message }
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
+
+=cut
 
 1;
 

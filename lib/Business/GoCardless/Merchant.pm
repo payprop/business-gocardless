@@ -1,5 +1,15 @@
 package Business::GoCardless::Merchant;
 
+=head1 NAME
+
+Business::GoCardless::Merchant
+
+=head1 DESCRIPTION
+
+A class for a gocardless merchant, extends L<Business::GoCardless::Resource>
+
+=cut
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 
@@ -8,6 +18,29 @@ use Business::GoCardless::PreAuthorization;
 use Business::GoCardless::Payout;
 use Business::GoCardless::User;
 use Business::GoCardless::Paginator;
+
+=head1 ATTRIBUTES
+
+    balance
+    created_at
+    description
+    email
+    eur_balance
+    eur_pending_balance
+    first_name
+    gbp_balance
+    gbp_pending_balance
+    hide_variable_amount
+    id
+    last_name
+    name
+    next_payout_amount
+    next_payout_date
+    pending_balance
+    sub_resource_uris
+    uri
+
+=cut
 
 has [ qw/
     balance
@@ -43,6 +76,22 @@ sub BUILD {
 
     return $self;
 }
+
+=head1 List operations on a merchant
+
+    bills
+    pre_authorizations
+    subscriptions
+    payouts
+    users
+
+    my @bills = $Merchant->bills( \%filter );
+
+Note that these methods marked have a dual interface, when called in list context
+they will return the first 100 resource objects, when called in scalar context
+they will return a L<Business::GoCardless::Pagination> object.
+
+=cut
 
 sub bills              { shift->_list( 'bills',shift ) }
 sub pre_authorizations { shift->_list( 'pre_authorizations',shift )}
@@ -85,6 +134,18 @@ sub _list {
         objects => \@objects,
     );
 }
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/leejo/business-gocardless
+
+=cut
 
 1;
 
