@@ -7,7 +7,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless API
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 DESCRIPTION
 
@@ -123,14 +123,14 @@ appropriate error catching code (TryCatch in the below example):
 
 Any methods marked as B<pager> have a dual interface, when called in list context
 they will return the first 100 resource objects, when called in scalar context they
-will return a L<Business::GoCardless::Pagination> object allowing you to iterate
+will return a L<Business::GoCardless::Paginator> object allowing you to iterate
 through all the objects:
 
     # get a list of L<Business::GoCardless::Bill> objects
     # (filter optional: https://developer.gocardless.com/#filtering)
     my @bills = $GoCardless->bills( %filter );
 
-    # or using the Business::GoCardless::Pagination object:
+    # or using the Business::GoCardless::Paginator object:
     my $Pager = $GoCardless->bills;
 
     while( my @bills = $Pager->next ) {

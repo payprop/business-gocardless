@@ -89,7 +89,7 @@ sub BUILD {
 
 Note that these methods marked have a dual interface, when called in list context
 they will return the first 100 resource objects, when called in scalar context
-they will return a L<Business::GoCardless::Pagination> object.
+they will return a L<Business::GoCardless::Paginator> object.
 
 =cut
 
