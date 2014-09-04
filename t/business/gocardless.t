@@ -198,9 +198,19 @@ sub test_merchant {
         '->merchant returns a Business::GoCardless::Merchant object',
     );
 
-    $mock->mock( 'content',sub { _payouts_json() } );
+    my $i = 0;
 
-    my @payouts = $Merchant->payouts;
+    $mock->mock(
+        'content',
+        sub {
+            # first time return a merchant object, next time a list of pre_auths
+            $i++
+                ? _payouts_json()
+                : _merchant_json()
+        }
+    );
+
+    my @payouts = $GoCardless->payouts;
     cmp_deeply(
         \@payouts,
         [ _payout_obj( { 'app_ids' => [ 'ABC' ] } ) ],

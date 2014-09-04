@@ -63,6 +63,16 @@ can_ok(
 
 is( $Bill->endpoint,'/bills/%s','endpoint' );
 
+$Bill->status( 'unknown' );
+
+ok( ! $Bill->pending,'pending' );
+ok( ! $Bill->paid,'paid' );
+ok( ! $Bill->failed,'failed' );
+ok( ! $Bill->chargedback,'chargedback' );
+ok( ! $Bill->cancelled,'cancelled' );
+ok( ! $Bill->withdrawn,'withdrawn' );
+ok( ! $Bill->refunded,'refunded' );
+
 done_testing();
 
 # vim: ts=4:sw=4:et

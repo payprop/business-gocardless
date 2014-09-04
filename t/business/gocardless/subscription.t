@@ -52,6 +52,13 @@ can_ok(
 
 is( $Subscription->endpoint,'/subscriptions/%s','endpoint' );
 
+$Subscription->status( 'unknown' );
+
+ok( ! $Subscription->inactive,'inactive' );
+ok( ! $Subscription->active,'active' );
+ok( ! $Subscription->cancelled,'cancelled' );
+ok( ! $Subscription->expired,'expired' );
+
 done_testing();
 
 # vim: ts=4:sw=4:et

@@ -12,3 +12,4 @@
 ~$
 /Business-GoCardless*tar.gz
 t/end_to_end/*.json
+cover_db
