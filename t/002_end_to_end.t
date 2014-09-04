@@ -60,7 +60,7 @@ my $new_url = $GoCardless->new_bill_url(
 diag "Visit and complete: $new_url";
 my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/bill.json" );
 isa_ok(
-    my $Bill = $GoCardless->client->confirm_resource( $confirm_resource_data ),
+    my $Bill = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
     'Business::GoCardless::Bill'
 );
 
@@ -95,8 +95,8 @@ $confirm_resource_data = _get_confirm_resource_data(
     "$tmp_dir/pre_authorization.json"
 );
 isa_ok(
-    my $PreAuthorization = $GoCardless->client->confirm_resource(
-        $confirm_resource_data
+    my $PreAuthorization = $GoCardless->confirm_resource(
+        %{ $confirm_resource_data }
     ),
     'Business::GoCardless::PreAuthorization'
 );
@@ -120,8 +120,8 @@ $confirm_resource_data = _get_confirm_resource_data(
 );
 
 isa_ok(
-    my $Subscription = $GoCardless->client->confirm_resource(
-        $confirm_resource_data
+    my $Subscription = $GoCardless->confirm_resource(
+        %{ $confirm_resource_data }
     ),
     'Business::GoCardless::Subscription'
 );
