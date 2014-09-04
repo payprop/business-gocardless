@@ -108,7 +108,7 @@ sub normalize_params {
         sort { $a->[0] cmp $b->[0] || $a->[1] cmp $b->[1] }
         @{ ref( $params ) eq 'HASH'
             ? $self->flatten_params( $params )
-            : $params
+            : ( $params // [] )
         }
     );
 }
