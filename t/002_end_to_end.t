@@ -8,7 +8,7 @@ use Test::Deep;
 use Test::Exception;
 use LWP::Simple;
 use Business::GoCardless;
-use Mojo::JSON qw/ decode_json /;
+use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
 
 use FindBin qw/ $Bin /;

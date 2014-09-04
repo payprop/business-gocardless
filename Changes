@@ -1,4 +1,7 @@
 Revision history for Business-GoCardless
 
+0.02     2014-09-04
+        * Remove dependency on Mojo::JSON in a couple of tests
+
 0.01     2014-09-04
         * First release

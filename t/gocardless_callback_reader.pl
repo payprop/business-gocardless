@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Mojolicious::Lite;
-use Mojo::JSON qw/ encode_json /;
+use JSON qw/ encode_json /;
 use FindBin qw/ $Bin /;
 
 my $tmp_dir = "$Bin/end_to_end";
