@@ -7,7 +7,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless API
 
 =head1 VERSION
 
-0.04
+0.05
 
 =head1 DESCRIPTION
 
@@ -454,6 +454,8 @@ L<Business::GoCardless::User>
 =head1 AUTHOR
 
 Lee Johnson - C<leejo@cpan.org>
+
+=head1 LICENSE
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself. If you would like to contribute documentation,
