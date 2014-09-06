@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use JSON;
+
 package TestResource;
 
 use Moo;
@@ -66,7 +68,7 @@ cmp_deeply(
     { $TestResource->to_hash },
     {
         'age' => 30,
-        'alive' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),
+        'alive' => JSON::true,
         'endpoint' => '/test_resources/%s',
         'name' => 'Lee',
         'time' => '2014-08-20T21:41:25Z'
@@ -78,7 +80,7 @@ is(
     $TestResource->to_json,
     JSON->new->canonical->encode( {
         'age' => 30,
-        'alive' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),
+        'alive' => JSON::true,
         'endpoint' => '/test_resources/%s',
         'name' => 'Lee',
         'time' => '2014-08-20T21:41:25Z'

@@ -1,11 +1,14 @@
 Revision history for Business-GoCardless
 
+0.04     2014-09-06
+        - fix test failures for checking JSON boolean values
+
 0.03     2014-09-04
-		* Correct links in perldoc
+        - Correct links in perldoc
 
 0.02     2014-09-04
-        * Remove dependency on Mojo::JSON in a couple of tests
-        * Fix use of undef as an ARRAY in Utils::normalize_params
+        - Remove dependency on Mojo::JSON in a couple of tests
+        - Fix use of undef as an ARRAY in Utils::normalize_params
 
 0.01     2014-09-04
-        * First release
+        - First release

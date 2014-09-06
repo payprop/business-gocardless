@@ -7,6 +7,7 @@ use Test::Most;
 use Test::Deep;
 use Test::MockObject;
 use Test::Exception;
+use JSON;
 
 # soft requirements of Business::GoCardless::Client
 # "soft" in that they're not required => 1 but must
@@ -667,7 +668,7 @@ sub _merchant_obj {
             'first_name'           => 'Lee',
             'gbp_balance'          => '0.0',
             'gbp_pending_balance'  => '0.0',
-            'hide_variable_amount' => bless( do { \( my $o = 0 ) }, 'JSON::PP::Boolean' ),
+            'hide_variable_amount' => JSON::false,
             'id'                   => '06Z06JWQW1',
             'last_name'            => 'Johnson',
             'name'                 => 'Company Ltd',
@@ -727,10 +728,7 @@ sub _bill_obj {
 
     return bless({
         'amount'             => '44.0',
-        'can_be_retried'     => bless(
-            do { \( my $o = 0 ) },
-            'JSON::PP::Boolean'
-        ),
+        'can_be_retried'     => JSON::false,
         'charge_customer_at' => '2014-09-01',
         'client' => ignore(),
         'created_at'      => '2014-08-20T21:41:25Z',
@@ -739,10 +737,7 @@ sub _bill_obj {
         'endpoint'        => '/bills/%s',
         'gocardless_fees' => '0.44',
         'id'              => '123ABCD',
-        'is_setup_fee'    => bless(
-             do { \( my $o = 0 ) },
-            'JSON::PP::Boolean'
-        ),
+        'is_setup_fee'    => JSON::false,
         'merchant_id'     => '06Z06JWQW1',
         'name'            => 'Bill 2 for Subscription description',
         'paid_at'         => undef,
