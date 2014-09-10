@@ -5,7 +5,7 @@ use warnings;
 
 use Test::Most;
 use Test::Exception;
-use TryCatch;
+use Try::Tiny;
 
 use_ok( 'Business::GoCardless::Exception' );
 
@@ -79,35 +79,10 @@ try {
         message => 'Boo!'
     );
 }
-catch ( Business::GoCardless::Exception $e ) {
-    is( $e->message,'Boo!','TryCatch catches exceptions' );
-}
-
-try {
-    Business::GoCardless::Exception->throw(
-        message => 'Boo!',
-        code    => 400,
-    );
-}
-catch ( Business::GoCardless::Exception $e where { $_->code == 400 } ) {
-    is( $e->message,'Boo!','TryCatch catches exceptions with where' );
-}
-
-try {
-    Business::GoCardless::Exception->throw(
-        message => 'Boo!',
-        code    => 400,
-    );
-}
-catch ( Business::GoCardless::Exception $e where { $_->code != 400 } ) {
-    fail( "Exception caught in wrong block" );
-}
-catch ( Business::GoCardless::Exception $e ) {
-    is( $e->message,'Boo!','TryCatch default case' );
-}
-catch ( $e ) {
-    fail( "reached fall through in TryCatch" );
-}
+catch {
+    isa_ok( $_,'Business::GoCardless::Exception' );
+    is( $_->message,'Boo!','Try::Tiny catches exceptions' );
+};
 
 done_testing();
 

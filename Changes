@@ -1,5 +1,11 @@
 Revision history for Business-GoCardless
 
+0.06     2014-09-10
+        - Replace use of TryCatch with Try::Tiny in tests
+
+0.05     2014-09-06
+        - Kwalitee improvements in distribution
+
 0.04     2014-09-06
         - fix test failures for checking JSON boolean values
 
