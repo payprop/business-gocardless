@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.07     2014-09-16
+        - Add Webhook support (https://developer.gocardless.com/#webhook-overview)
+
 0.06     2014-09-10
         - Replace use of TryCatch with Try::Tiny in tests
 

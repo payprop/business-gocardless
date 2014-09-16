@@ -58,6 +58,7 @@ test_payout( $GoCardless,$mock );
 test_pre_authorization( $GoCardless,$mock );
 test_subscription( $GoCardless,$mock );
 test_user( $GoCardless,$mock );
+test_webhook( $GoCardless,$mock );
 
 done_testing();
 
@@ -427,6 +428,25 @@ sub test_user {
 
 }
 
+sub test_webhook {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    $ENV{GOCARDLESS_SKIP_SIG_CHECK} = 0;
+    $ENV{GOCARDLESS_DEV_TESTING} = 0;
+
+    note( "Webhook" );
+
+    my $Webhook = $GoCardless->webhook( _webhook_payload() );
+    isa_ok( $Webhook,'Business::GoCardless::Webhook' );
+
+    throws_ok(
+        sub { $GoCardless->webhook( _webhook_payload( "bad signature" ) ) },
+        'Business::GoCardless::Exception',
+        '->webhook checks signature',
+    );
+}
+
 sub _user_json {
 
     return qq{
@@ -750,6 +770,43 @@ sub _bill_obj {
         'uri'             => 'https://gocardless.com/api/v1/bills/123ABCD',
     },'Business::GoCardless::Bill'
     );
+}
+
+sub _webhook_payload {
+
+    my ( $signature ) = @_;
+
+    $signature //= 'c6e7ea99cfb52b98a04a36a79920fff71ce851ca38e1f5a1e487f8c92417350e';
+
+    return qq{{
+        "payload": {
+            "resource_type": "bill",
+            "action": "paid",
+            "bills": [
+                {
+                    "id": "AKJ398H8KA",
+                    "status": "paid",
+                    "source_type": "subscription",
+                    "source_id": "KKJ398H8K8",
+                    "amount": "20.0",
+                    "amount_minus_fees": "19.8",
+                    "paid_at": "2011-12-01T12:00:00Z",
+                    "uri": "https://gocardless.com/api/v1/bills/AKJ398H8KA"
+                },
+                {
+                    "id": "AKJ398H8KB",
+                    "status": "paid",
+                    "source_type": "subscription",
+                    "source_id": "8AKJ398H78",
+                    "amount": "20.0",
+                    "amount_minus_fees": "19.8",
+                    "paid_at": "2011-12-09T12:00:00Z",
+                    "uri": "https://gocardless.com/api/v1/bills/AKJ398H8KB"
+                }
+            ],
+            "signature": "$signature"
+        }
+    }};
 }
 
 # vim: ts=4:sw=4:et

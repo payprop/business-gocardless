@@ -11,6 +11,7 @@ lib/Business/GoCardless/Resource.pm
 lib/Business/GoCardless/Subscription.pm
 lib/Business/GoCardless/User.pm
 lib/Business/GoCardless/Utils.pm
+lib/Business/GoCardless/Webhook.pm
 lib/Business/GoCardless/Version.pm
 Makefile.PL
 MANIFEST
@@ -30,5 +31,6 @@ t/business/gocardless/resource.t
 t/business/gocardless/subscription.t
 t/business/gocardless/user.t
 t/business/gocardless/utils.t
+t/business/gocardless/webhook.t
 t/end_to_end/.exists
 t/gocardless_callback_reader.pl

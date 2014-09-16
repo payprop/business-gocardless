@@ -15,8 +15,8 @@ Business::GoCardless is a library for easy interface to the gocardless
 payment service, it implements most of the functionality currently found
 in the service's API documentation: https://developer.gocardless.com
 
-Current missing functionality is partner account handling and webhooks, but
-all resource manipulation (Bill, Merchant, Payout etc) is handled along with
+Current missing functionality is partner account handling, but all resource
+manipulation (Bill, Merchant, Payout etc) is handled along with webhooks and
 the checking/generation of signature, nonce, param normalisation, and other
 such lower level interface with the API.
 
@@ -147,6 +147,7 @@ with 'Business::GoCardless::Version';
 use Carp qw/ confess /;
 
 use Business::GoCardless::Client;
+use Business::GoCardless::Webhook;
 
 =head1 ATTRIBUTES
 
@@ -425,6 +426,28 @@ sub users {
         ->users( \%filters );
 }
 
+=head1 Webhook Methods
+
+See L<Business::GoCardless::Webhook> for more information on Webhook operations.
+
+=head2 webhook
+
+Get a L<Business::GoCardless::Webhook> object from the data sent to you via a
+GoCardless webhook:
+
+    my $Webhook = $GoCardless->webhook( $json_data );
+
+=cut
+
+sub webhook {
+    my ( $self,$data ) = @_;
+
+    return Business::GoCardless::Webhook->new(
+        client => $self->client,
+        json   => $data,
+    );
+}
+
 sub _generic_find_obj {
     my ( $self,$id,$class ) = @_;
     $class = "Business::GoCardless::$class";
@@ -450,6 +473,8 @@ L<Business::GoCardless::Payout>
 L<Business::GoCardless::Subscription>
 
 L<Business::GoCardless::User>
+
+L<Business::GoCardless::Webhook>
 
 =head1 AUTHOR
 

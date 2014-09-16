@@ -12,7 +12,6 @@ behaviour. You shouldn't use this class directly, but extend it instead.
 =cut
 
 use Moo;
-use Business::GoCardless::Exception;
 use Carp qw/ confess /;
 use JSON ();
 

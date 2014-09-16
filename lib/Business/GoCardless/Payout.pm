@@ -13,8 +13,6 @@ A class for a gocardless payout, extends L<Business::GoCardless::Resource>
 use Moo;
 extends 'Business::GoCardless::Resource';
 
-use Business::GoCardless::Exception;
-
 =head1 ATTRIBUTES
 
     amount

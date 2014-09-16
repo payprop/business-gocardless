@@ -13,7 +13,6 @@ A class for a gocardless pre_authorization, extends L<Business::GoCardless::Reso
 use Moo;
 extends 'Business::GoCardless::Resource';
 
-use Business::GoCardless::Exception;
 use Business::GoCardless::Bill;
 
 =head1 ATTRIBUTES

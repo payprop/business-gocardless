@@ -11,7 +11,6 @@ A class for a gocardless bill, extends L<Business::GoCardless::Resource>
 =cut
 
 use Moo;
-use Business::GoCardless::Exception;
 
 extends 'Business::GoCardless::Resource';
 
