@@ -5,7 +5,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless API
 
 # VERSION
 
-0.03
+0.08
 
 # DESCRIPTION
 
@@ -13,8 +13,8 @@ Business::GoCardless is a library for easy interface to the gocardless
 payment service, it implements most of the functionality currently found
 in the service's API documentation: https://developer.gocardless.com
 
-Current missing functionality is partner account handling and webhooks, but
-all resource manipulation (Bill, Merchant, Payout etc) is handled along with
+Current missing functionality is partner account handling, but all resource
+manipulation (Bill, Merchant, Payout etc) is handled along with webhooks and
 the checking/generation of signature, nonce, param normalisation, and other
 such lower level interface with the API.
 
@@ -284,6 +284,17 @@ Get a list of [Business::GoCardless::User](https://metacpan.org/pod/Business::Go
 
     my @users = $GoCardless->users;
 
+# Webhook Methods
+
+See [Business::GoCardless::Webhook](https://metacpan.org/pod/Business::GoCardless::Webhook) for more information on Webhook operations.
+
+## webhook
+
+Get a [Business::GoCardless::Webhook](https://metacpan.org/pod/Business::GoCardless::Webhook) object from the data sent to you via a
+GoCardless webhook:
+
+    my $Webhook = $GoCardless->webhook( $json_data );
+
 # SEE ALSO
 
 [Business::GoCardless::Resource](https://metacpan.org/pod/Business::GoCardless::Resource)
@@ -300,9 +311,13 @@ Get a list of [Business::GoCardless::User](https://metacpan.org/pod/Business::Go
 
 [Business::GoCardless::User](https://metacpan.org/pod/Business::GoCardless::User)
 
+[Business::GoCardless::Webhook](https://metacpan.org/pod/Business::GoCardless::Webhook)
+
 # AUTHOR
 
 Lee Johnson - `leejo@cpan.org`
+
+# LICENSE
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself. If you would like to contribute documentation,

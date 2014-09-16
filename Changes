@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.08     2014-09-16
+        - POD updates
+
 0.07     2014-09-16
         - Add Webhook support (https://developer.gocardless.com/#webhook-overview)
 
