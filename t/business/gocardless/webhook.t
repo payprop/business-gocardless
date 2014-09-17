@@ -33,6 +33,9 @@ can_ok(
 );
 
 is( $Webhook->resource_type,'bill','resource_type' );
+ok( $Webhook->is_bill,'is_bill' );
+ok( !$Webhook->is_subscription,'! is_subscription' );
+ok( !$Webhook->is_pre_authorization,'! is_pre_authorization' );
 is( $Webhook->action,'paid','action' );
 
 cmp_deeply(

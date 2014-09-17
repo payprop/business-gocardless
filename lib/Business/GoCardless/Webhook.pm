@@ -6,7 +6,7 @@ Business::GoCardless::Webhook
 
 =head1 DESCRIPTION
 
-A class for a gocardless webhooks, extends L<Business::GoCardless::Resource>.
+A class for gocardless webhooks, extends L<Business::GoCardless::Resource>.
 For more details see the gocardless API documentation specific to webhooks:
 https://developer.gocardless.com/#webhook-overview
 
@@ -92,11 +92,11 @@ has json => (
 Returns an array of resource objects (Bill, Subscription, etc) that are present
 in webhook allowing you to do things with them or update your own data:
 
-	if ( $Webhook->resource_type eq 'bill' ) {
+	if ( $Webhook->is_bill ) {
 		foreach my $Bill ( $Webhook->resources ) {
 			...
 		}
-	} elsif ( $Webhook->resource_type eq 'subscription' ) {
+	} elsif ( $Webhook->is_subscription ) {
 		...
 
 =cut
@@ -130,6 +130,31 @@ sub resources {
 
 	return @resources;
 }
+
+=head2 is_bill
+
+=head2 is_pre_authorization
+
+=head2 is_subscription
+
+Shortcut methods to get the type of data in the webhook, and thus the type of
+objects that will be returned by the call to ->resources
+
+=cut
+
+sub is_bill              { return shift->resource_type eq 'bill' }
+sub is_pre_authorization { return shift->resource_type eq 'subscription' }
+sub is_subscription      { return shift->resource_type eq 'pre_authorization' }
+
+=head1 CONFIRMING WEBHOOKS
+
+According to the gocardless API docs you should respond once the signature of the
+webhook has been checked. The response is a HTTP status 200 code:
+
+	HTTP/1.1 200 OK
+
+You should handle this in your own code, the library will not do it for you. See
+https://developer.gocardless.com/#response for more information
 
 =head1 AUTHOR
 

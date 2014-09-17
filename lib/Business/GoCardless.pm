@@ -7,7 +7,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless API
 
 =head1 VERSION
 
-0.08
+0.09
 
 =head1 DESCRIPTION
 

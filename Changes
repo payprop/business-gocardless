@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.09     2014-09-17
+        - Document the confirmation of webhooks
+
 0.08     2014-09-16
         - POD updates
 
