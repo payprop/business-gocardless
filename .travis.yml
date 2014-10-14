@@ -22,7 +22,7 @@ install:
     - cpanm --quiet --notest --installdeps .
 
 script:
-    - PERL5OPT=-MDevel::Cover=-ignore,"t/" prove -Ilib -lrs t
+    - PERL5OPT=-MDevel::Cover=-ignore,"t/",+ignore,"prove" prove -Ilib -lrs t
     - cover
 
 after_success:
