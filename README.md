@@ -3,6 +3,13 @@
 Business::GoCardless - Perl library for interacting with the GoCardless API
 (https://gocardless.com)
 
+<div>
+
+</div>
+
+<a href='https://travis-ci.org/leejo/business-gocardless?branch=master'><img src='https://travis-ci.org/leejo/business-gocardless.svg?branch=master' alt='Build Status' /></a>
+<a href='https://coveralls.io/r/leejo/business-gocardless?branch=master'><img src='https://coveralls.io/repos/leejo/business-gocardless/badge.png?branch=master' alt='Coverage Status' /></a>
+
 # VERSION
 
 0.09
