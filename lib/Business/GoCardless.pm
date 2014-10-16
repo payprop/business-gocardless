@@ -111,7 +111,7 @@ appropriate error catching code (TryCatch in the below example):
             }
         }
     }
-    catch ( Business::GoCardless::Exception ) {
+    catch ( Business::GoCardless::Exception $e ) {
         # error specific to Business::GoCardless
         ...
         say $e->message;  # error message
