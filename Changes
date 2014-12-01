@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.10     2014-12-01
+        - Documentation and distribution tweaks
+
 0.09     2014-09-17
         - Document the confirmation of webhooks
 
