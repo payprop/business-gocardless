@@ -1,5 +1,9 @@
 Revision history for Business-GoCardless
 
+0.11     2014-04-02
+        - Documentation clarification regarding which API version this lib
+          is for (as GoCardless are working on Basic v2 BETA and Pro APIs)
+
 0.10     2014-12-01
         - Documentation and distribution tweaks
 

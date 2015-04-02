@@ -1,6 +1,6 @@
 # NAME
 
-Business::GoCardless - Perl library for interacting with the GoCardless API
+Business::GoCardless - Perl library for interacting with the GoCardless Basic v1 API
 (https://gocardless.com)
 
 <div>
@@ -24,14 +24,14 @@ manipulation (Bill, Merchant, Payout etc) is handled along with webhooks and
 the checking/generation of signature, nonce, param normalisation, and other
 such lower level interface with the API.
 
-Please note this library is in its early stages and is subject to change. An
-attempt has been made to write it in such a way as to make this unlikely - it
-borrows heavily from the official gocardless ruby library.
+Please note this library is only compatible with the Basic v1 GoCardless API
+and will not function with the Basic v2+ and Pro GoCardless APIs. A library
+to use these APIs is in development.
 
 **You should refer to the official gocardless API documentation in conjunction**
 **with this perldoc**, as the official API documentation explains in more depth
 some of the functionality including required / optional parameters for certain
-methods.
+methods. [https://developer.gocardless.com](https://developer.gocardless.com)
 
 # SYNOPSIS
 

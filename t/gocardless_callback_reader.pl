@@ -38,6 +38,15 @@ get '/merchants/:mid/confirm_resource' => sub {
     );
 };
 
+any '/webhook' => sub {
+    my ( $c ) = @_;
+
+    $c->render(
+        status => 200,
+        json   => {},
+    );
+};
+
 app->start;
 
 # vim: ts=4:sw=4:et
