@@ -12,7 +12,7 @@ A role for a gocardless version information.
 
 use Moo::Role;
 
-$Business::GoCardless::VERSION     = '0.11';
+$Business::GoCardless::VERSION     = '0.12';
 $Business::GoCardless::API_VERSION = 'v1';
 
 =head1 AUTHOR
@@ -23,7 +23,7 @@ This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself. If you would like to contribute documentation,
 features, bug fixes, or anything else then please raise an issue / pull request:
 
-    https://github.com/leejo/business-gocardless
+    https://github.com/G3S/business-gocardless
 
 =cut
 

@@ -35,8 +35,8 @@ WriteMakefile(
         resources => {
             license    => 'http://dev.perl.org/licenses/',
             homepage   => 'https://metacpan.org/module/Business::GoCardless',
-            bugtracker => 'https://github.com/leejo/business-gocardless/issues',
-            repository => 'https://github.com/leejo/business-gocardless'
+            bugtracker => 'https://github.com/G3S/business-gocardless/issues',
+            repository => 'https://github.com/G3S/business-gocardless'
         },
     },
     test => {
