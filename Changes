@@ -1,7 +1,7 @@
 Revision history for Business-GoCardless
 
 0.12     2015-10-21
-        - Move github repo to G3S org
+        - Move github repo to Humanstate org
 
 0.11     2015-04-02
         - Documentation clarification regarding which API version this lib

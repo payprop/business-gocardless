@@ -5,8 +5,8 @@ Business::GoCardless - Perl library for interacting with the GoCardless Basic v1
 
 <div>
 
-    <a href='https://travis-ci.org/G3S/business-gocardless?branch=master'><img src='https://travis-ci.org/G3S/business-gocardless.svg?branch=master' alt='Build Status' /></a>
-    <a href='https://coveralls.io/r/G3S/business-gocardless?branch=master'><img src='https://coveralls.io/repos/G3S/business-gocardless/badge.png?branch=master' alt='Coverage Status' /></a>
+    <a href='https://travis-ci.org/Humanstate/business-gocardless?branch=master'><img src='https://travis-ci.org/Humanstate/business-gocardless.svg?branch=master' alt='Build Status' /></a>
+    <a href='https://coveralls.io/r/Humanstate/business-gocardless?branch=master'><img src='https://coveralls.io/repos/Humanstate/business-gocardless/badge.png?branch=master' alt='Coverage Status' /></a>
 </div>
 
 # VERSION
@@ -329,4 +329,4 @@ This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself. If you would like to contribute documentation,
 features, bug fixes, or anything else then please raise an issue / pull request:
 
-    https://github.com/G3S/business-gocardless
+    https://github.com/Humanstate/business-gocardless
