@@ -12,7 +12,7 @@ A role for a gocardless version information.
 
 use Moo::Role;
 
-$Business::GoCardless::VERSION     = '0.12';
+$Business::GoCardless::VERSION     = '0.13';
 $Business::GoCardless::API_VERSION = 'v1';
 
 =head1 AUTHOR

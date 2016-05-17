@@ -11,7 +11,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless Basic v1
 
 # VERSION
 
-0.12
+0.13
 
 # DESCRIPTION
 
