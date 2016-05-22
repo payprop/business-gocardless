@@ -10,6 +10,9 @@ A role containing gocardless utilities.
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo::Role;
 
 use MIME::Base64 qw/ encode_base64 /;

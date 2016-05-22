@@ -10,6 +10,9 @@ A class for pagination through gocardless data returned as a list.
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 use JSON ();

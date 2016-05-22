@@ -10,6 +10,9 @@ A class for a gocardless pre_authorization, extends L<Business::GoCardless::Reso
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 

@@ -11,6 +11,9 @@ there is nothing you should be doing with this.
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 with 'Business::GoCardless::Utils';
 with 'Business::GoCardless::Version';

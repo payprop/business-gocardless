@@ -10,9 +10,12 @@ A role for a gocardless version information.
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo::Role;
 
-$Business::GoCardless::VERSION     = '0.13';
+$Business::GoCardless::VERSION     = '0.14';
 $Business::GoCardless::API_VERSION = 'v1';
 
 =head1 AUTHOR

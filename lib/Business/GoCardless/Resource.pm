@@ -11,6 +11,9 @@ behaviour. You shouldn't use this class directly, but extend it instead.
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 use Carp qw/ confess /;
 use JSON ();

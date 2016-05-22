@@ -12,6 +12,9 @@ https://developer.gocardless.com/#webhook-overview
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 with 'Business::GoCardless::Utils';

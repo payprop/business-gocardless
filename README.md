@@ -98,9 +98,7 @@ when given the necessary ENV variables.
 
 Any problems or errors will result in a Business::GoCardless::Exception
 object being thrown, so you should wrap any calls to the library in the
-appropriate error catching code (TryCatch in the below example):
-
-    use TryCatch;
+appropriate error catching code (ideally using a module from CPAN):
 
     try {
         my $Pager = $GoCardless->bills;
