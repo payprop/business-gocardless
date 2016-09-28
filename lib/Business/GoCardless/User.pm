@@ -10,6 +10,9 @@ A class for a gocardless user, extends L<Business::GoCardless::Resource>
 
 =cut
 
+use strict;
+use warnings;
+
 use Moo;
 extends 'Business::GoCardless::Resource';
 
