@@ -143,8 +143,8 @@ objects that will be returned by the call to ->resources
 =cut
 
 sub is_bill              { return shift->resource_type eq 'bill' }
-sub is_pre_authorization { return shift->resource_type eq 'subscription' }
-sub is_subscription      { return shift->resource_type eq 'pre_authorization' }
+sub is_pre_authorization { return shift->resource_type eq 'pre_authorization' }
+sub is_subscription      { return shift->resource_type eq 'subscription' }
 
 =head1 CONFIRMING WEBHOOKS
 
