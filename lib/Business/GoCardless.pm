@@ -11,7 +11,7 @@ Business::GoCardless - Perl library for interacting with the GoCardless Basic v1
 
 =head1 VERSION
 
-0.15
+0.16
 
 =head1 DESCRIPTION
 
@@ -24,14 +24,16 @@ manipulation (Bill, Merchant, Payout etc) is handled along with webhooks and
 the checking/generation of signature, nonce, param normalisation, and other
 such lower level interface with the API.
 
-Please note this library is only compatible with the Basic v1 GoCardless API
-and will not function with the Basic v2+ and Pro GoCardless APIs. A library
-to use these APIs is in development.
+Please note this library is only compatible with the Basic v1 GoCardless API,
+which GoCardless are now calling "The Legacy GoCardless API". These modules
+will not function with the Basic v2+ and Pro GoCardless APIs. A library
+to use the v2 API is in development.
 
 B<You should refer to the official gocardless API documentation in conjunction>
 B<with this perldoc>, as the official API documentation explains in more depth
 some of the functionality including required / optional parameters for certain
-methods. L<https://developer.gocardless.com>
+methods. L<https://developer.gocardless.com>, specifically the docs for the
+v1 GoCardless API at L<https://developer.gocardless.com/legacy>.
 
 =head1 SYNOPSIS
 

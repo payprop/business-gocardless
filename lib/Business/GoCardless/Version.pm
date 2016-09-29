@@ -15,7 +15,7 @@ use warnings;
 
 use Moo::Role;
 
-$Business::GoCardless::VERSION     = '0.15';
+$Business::GoCardless::VERSION     = '0.16';
 $Business::GoCardless::API_VERSION = 'v1';
 
 =head1 AUTHOR

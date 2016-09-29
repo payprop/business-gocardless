@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.16     2016-09-29
+        - Clarify the version of the GoCardless API this dist works with
+
 0.15     2016-09-28
         - Fix is_pre_authorization and is_subscription in B::G::Webhook
           as previously they were the wrong way around
