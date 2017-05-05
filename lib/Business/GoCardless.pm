@@ -219,6 +219,7 @@ has client => (
         return Business::GoCardless::Client->new(
             %{ $self->client_details },
             token => $self->token,
+            api_version => $self->api_version,
         );
     },
 );
@@ -468,13 +469,13 @@ sub webhook {
 }
 
 sub _generic_find_obj {
-    my ( $self,$id,$class ) = @_;
+    my ( $self,$id,$class,$sub_key ) = @_;
     $class = "Business::GoCardless::$class";
     my $obj = $class->new(
         id     => $id,
         client => $self->client
     );
-    return $obj->find_with_client;
+    return $obj->find_with_client( $sub_key );
 }
 
 =head1 SEE ALSO

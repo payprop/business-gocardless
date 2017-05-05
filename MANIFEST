@@ -6,6 +6,7 @@ lib/Business/GoCardless/Client.pm
 lib/Business/GoCardless/Exception.pm
 lib/Business/GoCardless/Merchant.pm
 lib/Business/GoCardless/Paginator.pm
+lib/Business/GoCardless/Payment.pm
 lib/Business/GoCardless/Payout.pm
 lib/Business/GoCardless/PreAuthorization.pm
 lib/Business/GoCardless/Pro.pm

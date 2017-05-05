@@ -8,7 +8,7 @@ use Test::Most;
 use Test::Deep;
 use Test::Exception;
 use LWP::Simple;
-use Business::GoCardless::Basic;
+use Business::GoCardless::Pro;
 use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
 use Mojo::UserAgent;
@@ -26,12 +26,9 @@ plan skip_all => "GOCARDLESS_ENDTOEND required"
 # this script (hence "end to end") - note that the redirect URI
 # and webhook URI in the sandbox/live developer settings will also
 # need to match that of the address running the script
-my ( $token,$url,$app_id,$app_secret,$mid,$DEBUG ) = @ENV{qw/
+my ( $token,$url,$DEBUG ) = @ENV{qw/
     GOCARDLESS_TOKEN
     GOCARDLESS_URL
-    GOCARDLESS_APP_ID
-    GOCARDLESS_APP_SECRET
-    GOCARDLESS_MERCHANT_ID
 	GOCARDLESS_DEBUG
 /};
 
@@ -40,53 +37,56 @@ my ( $token,$url,$app_id,$app_secret,$mid,$DEBUG ) = @ENV{qw/
 # wrapping stuff in this test in evals to debug
 $ENV{GOCARDLESS_DEV_TESTING} = 1;
 
-my $GoCardless = Business::GoCardless::Basic->new(
+my $GoCardless = Business::GoCardless::Pro->new(
     token           => $token,
     # since these are set in %ENV we don't need to pass them
     # but am showing them being passed here for example usage
     client_details  => {
         base_url    => $url,
-        app_id      => $app_id,
-        app_secret  => $app_secret,
-        merchant_id => $mid,
     },
 );
 
-isa_ok( $GoCardless,'Business::GoCardless::Basic' );
-isa_ok( $GoCardless->merchant,'Business::GoCardless::Merchant' );
+isa_ok( $GoCardless,'Business::GoCardless::Pro' );
 
 my $new_url = $GoCardless->new_bill_url(
-    amount       => 100,
-    name         => 'Example payment',
-    redirect_uri => "http://localhost:3000/merchants/$mid/confirm_resource",
+	session_token        => 'foo',
+	description          => "Test Bill",
+	# not sure about having the amount + currency in the redirect URL (what's
+	# to stop user from changing it?) but can't see any other way to be back
+	# compat with the Basic API
+    success_redirect_url => "http://localhost:3000/rflow/confirm/bill/100/EUR",
 );
 
 _post_to_gocardless( $new_url,'bill' );
-my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/bill.json" );
+my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/redirect_flow.json" );
+
+note explain $confirm_resource_data;
+
 isa_ok(
-    my $Bill = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
-    'Business::GoCardless::Bill'
+    my $Payment = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
+    'Business::GoCardless::Payment'
 );
 
-ok( $Bill->cancel,'cancel bill' );
-ok( $Bill->cancelled,'bill cancelled' );
+ok( $Payment->cancel,'cancel payment' );
+ok( $Payment->cancelled,'payment cancelled' );
 
-my $NewBill = $GoCardless->bill( $Bill->id );
-is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
+my $NewPayment = $GoCardless->payment( $Payment->id );
+is( $NewPayment->id,$Payment->id,'getting payment with same id gives same payment' );
 
-my $Paginator = $GoCardless->bills(
-    per_page => 5,
+my $Paginator = $GoCardless->payments(
 );
 
 note explain $Paginator->info if $DEBUG;
 
-while ( my @bills = $Paginator->next ) {
+while ( my @payments = $Paginator->next ) {
 	pass( 'Paginator->next' );
 	if ( $DEBUG ) {
-		note scalar( @bills );
-		note explain [ map { $_->id } @bills ];
+		note scalar( @payments );
+		note explain [ map { $_->id } @payments ];
 	}
 }
+
+exit;
 
 my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
     max_amount         => 100,
@@ -108,7 +108,7 @@ isa_ok(
     'Business::GoCardless::PreAuthorization'
 );
 
-$Bill = $PreAuthorization->bill( amount => 100 );
+$Payment = $PreAuthorization->payment( amount => 100 );
 $PreAuthorization->cancel;
 $GoCardless->pre_authorizations;
 
@@ -164,25 +164,19 @@ sub _post_to_gocardless {
 	note( $post_url ) if $DEBUG;
 
 	my $account_params = {
-		'user[email]'                        => 'lee@g3s.ch',
-		'user[given_name]'                   => 'Lee',
-		'user[family_name]'                  => 'Johnson',
-		'user[company_name]'                 => '',
-		'user[address_line1]'                => 'My House 14',
-		'user[address_line2]'                => 'Somewhere',
-		'user[city]'                         => 'Huddersfield',
-		'user[postal_code]'                  => 'HD1 1XZ',
-		'user[bank_account][sort_code]'      => '200000',
-		'user[bank_account][account_number]' => '55779911',
-		'user[bank_account][currency]'       => 'GBP',
-		'user[bank_account][id]'             => '',
-		'authenticity_token'                 => $token,
-		'utf8'                               => '✓',
+		'customer[email]'               => 'lee@g3s.ch',
+		'customer[given_name]'          => 'Lee',
+		'customer[family_name]'         => 'Johnson',
+		'customer[country_code]'        => 'FR',
+		'customer[bank_accounts][iban]' => 'FR1420041010050500013M02606',
+		'authenticity_token'            => $token,
+		'utf8'                          => '✓',
+		'customer[bank_accounts][account_holder_name]' => 'Lee Johnson',
 	};
 
 	note explain $account_params if $DEBUG;
 
-	$post_url = join( '',$ENV{GOCARDLESS_URL},$post_url );
+	$post_url = "https://pay-sandbox.gocardless.com$post_url";
 	my $tx = $ua->post( $post_url => form => $account_params );
 	ok( $tx->success,"POST $post_url" );
 

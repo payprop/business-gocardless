@@ -22,6 +22,7 @@ use Business::GoCardless::Exception;
 use Business::GoCardless::Bill;
 use Business::GoCardless::Merchant;
 use Business::GoCardless::Payout;
+use Business::GoCardless::RedirectFlow;
 use Business::GoCardless::Subscription;
 
 use Carp qw/ confess /;
@@ -63,7 +64,7 @@ or will exit if not set.
 =head2 user_agent
 
 The user agent string used in requests to the gocardless API, defaults to
-business-gocardless/perl/v . $version_of_this_library.
+business-gocardless/perl/v . $version_of_this_library . - . $api_version
 
 =cut
 
@@ -98,6 +99,7 @@ has base_url => (
 has api_path => (
     is       => 'ro',
     required => 0,
+    lazy     => 1,
     default  => sub {
         my ( $self ) = @_;
 
@@ -111,7 +113,10 @@ has api_path => (
 
 has app_id => (
     is       => 'ro',
+    required => 0,
+    lazy     => 1,
     default  => sub {
+        return undef if shift->api_version > 1;
         $ENV{'GOCARDLESS_APP_ID'}
             or confess( "Missing required argument: app_id" );
     }
@@ -119,7 +124,10 @@ has app_id => (
 
 has app_secret => (
     is       => 'ro',
+    required => 0,
+    lazy     => 1,
     default  => sub {
+        return undef if shift->api_version > 1;
         $ENV{'GOCARDLESS_APP_SECRET'}
             or confess( "Missing required argument: app_secret" );
     }
@@ -127,7 +135,11 @@ has app_secret => (
 
 has merchant_id => (
     is       => 'ro',
+    required => 0,
+    lazy     => 1,
     default  => sub {
+        my ( $self ) = @_;
+        return undef if $self->api_version > 1;
         $ENV{'GOCARDLESS_MERCHANT_ID'}
             or confess( "Missing required argument: merchant_id" );
     }
@@ -136,8 +148,12 @@ has merchant_id => (
 has user_agent => (
     is      => 'ro',
     default => sub {
-        # probably want more infoin here, version of perl, platform, and such
-        return "business-gocardless/perl/v" . $Business::GoCardless::VERSION;
+        my ( $self ) = @_;
+        # maybe want more info in here, version of perl, platform, and such
+        return "business-gocardless/perl/v"
+            . $Business::GoCardless::VERSION
+            . "-" . $self->api_version
+        ;
     }
 );
 
@@ -182,6 +198,47 @@ sub _new_limit_url {
         $type,
         $self->normalize_params( $params )
     );
+}
+
+sub _new_redirect_flow_url {
+    my ( $self,$params ) = @_;
+
+    my $data = $self->api_post(
+        '/redirect_flows',
+        { redirect_flows => { %{ $params } } },
+    );
+
+    my $RedirectFlow = Business::GoCardless::RedirectFlow->new(
+        client => $self,
+        %{ $data->{redirect_flows} }
+    );
+
+    return $RedirectFlow->redirect_url;
+}
+
+sub _confirm_redirect_flow {
+    my ( $self,$redirect_flow_id ) = @_;
+
+    # first find the original session token
+    my $RedirectFlow = Business::GoCardless::RedirectFlow->new(
+        client => $self,
+        id => $redirect_flow_id,
+    );
+
+    $RedirectFlow->find_with_client( 'redirect_flows' );
+
+    # now confirm the redirect flow
+    my $data = $self->api_post(
+        "/redirect_flows/$redirect_flow_id/actions/complete",
+        { data => { session_token => $RedirectFlow->session_token } },
+    );
+
+    $RedirectFlow = Business::GoCardless::RedirectFlow->new(
+        client => $self,
+        %{ $data->{redirect_flows} }
+    );
+
+    return $RedirectFlow;
 }
 
 sub _confirm_resource {
@@ -285,18 +342,23 @@ sub _api_request {
     if ( $self->api_version > 1 ) {
         # pegged to a specific version for this library and not user controlled
         # https://developer.gocardless.com/api-reference/#making-requests-versions
-        $req->header( 'GoCardless-Version' => '2017-03-17' );
+        $req->header( 'GoCardless-Version' => '2015-07-06' );
     }
 
     if ( $method =~ /POST|PUT/ ) {
-      $req->content_type( 'application/x-www-form-urlencoded' );
-      $req->content( $self->normalize_params( $params ) );
+        if ( $self->api_version > 1 ) {
+            $req->content_type( 'application/json' );
+            $req->content( JSON->new->canonical->encode( $params ) ) if $params;
+        } else {
+            $req->content_type( 'application/x-www-form-urlencoded' );
+            $req->content( $self->normalize_params( $params ) );
+        }
     }
 
     my $res = $ua->request( $req );
 
     if ( $res->is_success ) {
-        my $data  = JSON->new->decode( $res->content );
+        my $data  = JSON->new->canonical->decode( $res->content );
         my $links = $res->header( 'link' );
         my $info  = $res->header( 'x-pagination' );
         return wantarray ? ( $data,$links,$info ) : $data;

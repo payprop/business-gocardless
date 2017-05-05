@@ -19,7 +19,6 @@ extends 'Business::GoCardless';
 has api_version => (
     is       => 'ro',
     required => 0,
-    lazy     => 1,
     default  => sub { 1 },
 );
 
