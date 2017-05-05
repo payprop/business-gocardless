@@ -21,9 +21,9 @@ $ENV{GOCARDLESS_MERCHANT_ID} = 'baz';
 # wrapping stuff in this test in evals to debug
 $ENV{GOCARDLESS_DEV_TESTING} = 1;
 
-use_ok( 'Business::GoCardless' );
+use_ok( 'Business::GoCardless::Basic' );
 isa_ok(
-    my $GoCardless = Business::GoCardless->new(
+    my $GoCardless = Business::GoCardless::Basic->new(
         token       => 'MvYX0i6snRh/1PXfPoc6',
         merchant_id => 'MID',
     ),

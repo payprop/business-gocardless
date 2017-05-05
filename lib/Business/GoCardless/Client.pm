@@ -67,6 +67,13 @@ business-gocardless/perl/v . $version_of_this_library.
 
 =cut
 
+has api_version => (
+    is       => 'ro',
+    required => 0,
+    lazy     => 1,
+    default  => sub { $ENV{GOCARDLESS_API_VERSION} // 1 },
+);
+
 has token => (
     is       => 'ro',
     required => 1,
@@ -76,14 +83,30 @@ has base_url => (
     is       => 'ro',
     required => 0,
     default  => sub {
-        $ENV{GOCARDLESS_URL} || 'https://gocardless.com';
+        my ( $self ) = @_;
+
+        if ( my $url = $ENV{GOCARDLESS_URL} ) {
+            return $url;
+        } else {
+            return $self->api_version == 1
+                ? 'https://gocardless.com'
+                : 'https://api.gocardless.com';
+        }
     },
 );
 
 has api_path => (
     is       => 'ro',
     required => 0,
-    default  => sub { '/api/' . $Business::GoCardless::API_VERSION },
+    default  => sub {
+        my ( $self ) = @_;
+
+        if ( $self->api_version == 1 ) {
+            return "/api/v" . $self->api_version;
+        } else {
+            return '';
+        }
+    },
 );
 
 has app_id => (
@@ -256,8 +279,14 @@ sub _api_request {
             ? $path : join( '/',$self->base_url . $self->api_path . $path ),
     );
 
-    $req->header( 'Authorization' => "bearer " . $self->token );
+    $req->header( 'Authorization' => "Bearer " . $self->token );
     $req->header( 'Accept' => 'application/json' );
+
+    if ( $self->api_version > 1 ) {
+        # pegged to a specific version for this library and not user controlled
+        # https://developer.gocardless.com/api-reference/#making-requests-versions
+        $req->header( 'GoCardless-Version' => '2017-03-17' );
+    }
 
     if ( $method =~ /POST|PUT/ ) {
       $req->content_type( 'application/x-www-form-urlencoded' );

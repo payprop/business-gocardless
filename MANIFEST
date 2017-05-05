@@ -1,5 +1,6 @@
 Changes
 lib/Business/GoCardless.pm
+lib/Business/GoCardless/Basic.pm
 lib/Business/GoCardless/Bill.pm
 lib/Business/GoCardless/Client.pm
 lib/Business/GoCardless/Exception.pm
@@ -7,6 +8,7 @@ lib/Business/GoCardless/Merchant.pm
 lib/Business/GoCardless/Paginator.pm
 lib/Business/GoCardless/Payout.pm
 lib/Business/GoCardless/PreAuthorization.pm
+lib/Business/GoCardless/Pro.pm
 lib/Business/GoCardless/Resource.pm
 lib/Business/GoCardless/Subscription.pm
 lib/Business/GoCardless/User.pm
@@ -21,12 +23,14 @@ t/001_compiles_pod.t
 t/002_end_to_end.t
 t/003_changes.t
 t/business/gocardless.t
+t/business/gocardless/basic.t
 t/business/gocardless/bill.t
 t/business/gocardless/client.t
 t/business/gocardless/exception.t
 t/business/gocardless/merchant.t
 t/business/gocardless/paginator.t
 t/business/gocardless/preauthorization.t
+t/business/gocardless/pro.t
 t/business/gocardless/resource.t
 t/business/gocardless/subscription.t
 t/business/gocardless/user.t

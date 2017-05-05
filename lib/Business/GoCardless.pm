@@ -177,6 +177,13 @@ The client object, defaults to L<Business::GoCardless::Client>.
 
 =cut
 
+has api_version => (
+    is       => 'ro',
+    required => 0,
+    lazy     => 1,
+    default  => sub { $ENV{GOCARDLESS_API_VERSION} // 1 },
+);
+
 has token => (
     is       => 'ro',
     required => 1,
@@ -190,7 +197,12 @@ has client_details => (
     },
     required => 0,
     lazy     => 1,
-    default  => sub { return {} },
+    default  => sub {
+        my ( $self ) = @_;
+        return {
+            api_version => $self->api_version,
+        };
+    },
 );
 
 has client => (

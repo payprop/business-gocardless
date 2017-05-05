@@ -8,7 +8,8 @@ use Test::Most;
 use Test::Deep;
 use Test::Exception;
 use LWP::Simple;
-use Business::GoCardless;
+use Business::GoCardless::Basic;
+use Business::GoCardless::Pro;
 use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
 use Mojo::UserAgent;
@@ -40,7 +41,11 @@ my ( $token,$url,$app_id,$app_secret,$mid,$DEBUG ) = @ENV{qw/
 # wrapping stuff in this test in evals to debug
 $ENV{GOCARDLESS_DEV_TESTING} = 1;
 
-my $GoCardless = Business::GoCardless->new(
+my $Class = $ENV{GOCARDLESS_ENDTOEND} > 1
+	? 'Business::GoCardless::Pro'
+	: 'Business::GoCardless::Basic';
+
+my $GoCardless = $Class->new(
     token           => $token,
     # since these are set in %ENV we don't need to pass them
     # but am showing them being passed here for example usage
@@ -52,7 +57,7 @@ my $GoCardless = Business::GoCardless->new(
     },
 );
 
-isa_ok( $GoCardless,'Business::GoCardless' );
+isa_ok( $GoCardless,$Class );
 isa_ok( $GoCardless->merchant,'Business::GoCardless::Merchant' );
 
 my $new_url = $GoCardless->new_bill_url(
