@@ -11,6 +11,8 @@
 ~$
 /Business-GoCardless*tar.gz
 t/end_to_end/*.json
+t/end_to_end*.sh
 cover_db
 end_to_end.sh
 end_to_end_pro.sh
+*.html

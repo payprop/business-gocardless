@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use utf8;
 
 use Test::Most;
 use Test::Deep;
@@ -10,6 +11,7 @@ use LWP::Simple;
 use Business::GoCardless;
 use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
+use Mojo::UserAgent;
 
 use FindBin qw/ $Bin /;
 my $tmp_dir = "$Bin/end_to_end";
@@ -21,13 +23,16 @@ plan skip_all => "GOCARDLESS_ENDTOEND required"
 # using the details defined in the ENV variables below. you need
 # to run t/gocardless_callback_reader.pl allowing the callbacks
 # from gocardless to succeed, which feeds the details back into
-# this script (hence "end to end")
-my ( $token,$url,$app_id,$app_secret,$mid ) = @ENV{qw/
+# this script (hence "end to end") - note that the redirect URI
+# and webhook URI in the sandbox/live developer settings will also
+# need to match that of the address running the script
+my ( $token,$url,$app_id,$app_secret,$mid,$DEBUG ) = @ENV{qw/
     GOCARDLESS_TOKEN
     GOCARDLESS_URL
     GOCARDLESS_APP_ID
     GOCARDLESS_APP_SECRET
     GOCARDLESS_MERCHANT_ID
+	GOCARDLESS_DEBUG
 /};
 
 # this makes Business::GoCardless::Exception show a stack
@@ -56,8 +61,7 @@ my $new_url = $GoCardless->new_bill_url(
     redirect_uri => "http://localhost:3000/merchants/$mid/confirm_resource",
 );
 
-# TODO: maybe automate this
-diag "Visit and complete: $new_url";
+_post_to_gocardless( $new_url,'bill' );
 my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/bill.json" );
 isa_ok(
     my $Bill = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
@@ -74,11 +78,14 @@ my $Paginator = $GoCardless->bills(
     per_page => 5,
 );
 
-note explain $Paginator->info;
+note explain $Paginator->info if $DEBUG;
 
 while ( my @bills = $Paginator->next ) {
-    note scalar( @bills );
-    note explain [ map { $_->id } @bills ];
+	pass( 'Paginator->next' );
+	if ( $DEBUG ) {
+		note scalar( @bills );
+		note explain [ map { $_->id } @bills ];
+	}
 }
 
 my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
@@ -90,7 +97,7 @@ my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
     description        => "Test PreAuthorization for testing",
 );
 
-diag "Visit and complete: $new_pre_auth_url";
+_post_to_gocardless( $new_pre_auth_url,'pre_authorization' );
 $confirm_resource_data = _get_confirm_resource_data(
     "$tmp_dir/pre_authorization.json"
 );
@@ -107,14 +114,14 @@ $GoCardless->pre_authorizations;
 
 my $new_subscription_url = $GoCardless->new_subscription_url(
     amount             => 100,
-    interval_length    => 10,
-    interval_unit      => 'day',
+    interval_length    => 1,
+    interval_unit      => 'month',
     name               => "Test Subscription",
     description        => "Test Subscription for testing",
     start_at           => strftime( "%Y-12-31",gmtime ),
 );
 
-diag "Visit and complete: $new_subscription_url";
+_post_to_gocardless( $new_subscription_url,'subscription' );
 $confirm_resource_data = _get_confirm_resource_data(
     "$tmp_dir/subscription.json"
 );
@@ -134,6 +141,63 @@ my $User = $users[0];
 isa_ok( $User,'Business::GoCardless::User' );
 
 done_testing();
+
+sub _post_to_gocardless {
+	my ( $url,$desc ) = @_;
+
+	note( $url ) if $DEBUG;
+
+	my $ua  = Mojo::UserAgent->new;
+	$ua->max_redirects( 2 );
+	my $res = $ua->get( $url )->result;
+	ok( $res->is_success,"GET $desc" );
+
+	if ( $DEBUG ) {
+		open( my $out,'>','before.html' );
+		print $out $res->body;
+		close( $out );
+	}
+
+	my $token = $res->dom->at('input[name=authenticity_token]')->val;
+	my $post_url = $res->dom->find('form')->map( attr => 'action' )->first;
+
+	note( $post_url ) if $DEBUG;
+
+	my $account_params = {
+		'user[email]'                        => 'lee@g3s.ch',
+		'user[given_name]'                   => 'Lee',
+		'user[family_name]'                  => 'Johnson',
+		'user[company_name]'                 => '',
+		'user[address_line1]'                => 'My House 14',
+		'user[address_line2]'                => 'Somewhere',
+		'user[city]'                         => 'Huddersfield',
+		'user[postal_code]'                  => 'HD1 1XZ',
+		'user[bank_account][sort_code]'      => '200000',
+		'user[bank_account][account_number]' => '55779911',
+		'user[bank_account][currency]'       => 'GBP',
+		'user[bank_account][id]'             => '',
+		'authenticity_token'                 => $token,
+		'utf8'                               => '✓',
+	};
+
+	note explain $account_params if $DEBUG;
+
+	$post_url = join( '',$ENV{GOCARDLESS_URL},$post_url );
+	my $tx = $ua->post( $post_url => form => $account_params );
+	ok( $tx->success,"POST $post_url" );
+
+	if ( $DEBUG ) {
+		open( my $out,'>','after.html' );
+		print $out $tx->res->body;
+		close( $out );
+	}
+
+	if ( ! $tx->success ) {
+		my $err = $tx->error;
+		BAIL_OUT( "$err->{code} response: $err->{message}" ) if $err->{code};
+		BAIL_OUT( "Connection error: $err->{message}" );
+	}
+}
 
 sub _get_confirm_resource_data {
 
