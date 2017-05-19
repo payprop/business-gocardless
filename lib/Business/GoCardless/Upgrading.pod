@@ -1,0 +1,44 @@
+=head1 NAME
+
+Business::GoCardless::Upgrading
+
+=head1 DESCRIPTION
+
+How to move from Business::GoCardless::Basic to Business::GoCardless::Pro
+
+=head1 First a little history
+
+
+=head1 Second check the gocardless docs
+
+L<https://support.gocardless.com/hc/en-us/articles/115000451505-Guide-to-upgrading>
+
+=head1 Third create a sandbox account
+
+
+=head1 Fourth check and use the end to end test
+
+
+=head1 Fifth modify your application code
+
+
+=head1 Sixth test your application code changes against the sandbox
+
+
+=head1 Seventh "go live"
+
+=head1 AUTHOR
+
+Lee Johnson - C<leejo@cpan.org>
+
+This library is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself. If you would like to contribute documentation,
+features, bug fixes, or anything else then please raise an issue / pull request:
+
+    https://github.com/Humanstate/business-gocardless
+
+=cut
+
+1;
+
+# vim: ts=4:sw=4:et

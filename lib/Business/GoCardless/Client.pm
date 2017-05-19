@@ -56,6 +56,11 @@ exit if not set.
 Your gocardless app secret, defaults to $ENV{GOCARDLESS_APP_SECRET} or will
 exit if not set.
 
+=head2 webhook_secret
+
+Your gocardless webhook secret, defaults to $ENV{GOCARDLESS_WEBHOOK_SECRET} or will
+exit if not set.
+
 =head2 merchant_id
 
 Your gocardless merchant identifier, defaults to $ENV{GOCARDLESS_MERCHANT_ID}
@@ -130,6 +135,16 @@ has app_secret => (
         return undef if shift->api_version > 1;
         $ENV{'GOCARDLESS_APP_SECRET'}
             or confess( "Missing required argument: app_secret" );
+    }
+);
+
+has webhook_secret => (
+    is       => 'ro',
+    required => 0,
+    lazy     => 1,
+    default  => sub {
+        $ENV{'GOCARDLESS_WEBHOOK_SECRET'}
+            or confess( "Missing required argument: webhook_secret" );
     }
 );
 

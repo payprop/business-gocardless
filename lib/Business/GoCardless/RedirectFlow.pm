@@ -6,7 +6,7 @@ Business::GoCardless::RedirectFlow
 
 =head1 DESCRIPTION
 
-A class for a gocardless redirect flow, extends L<Business::GoCardless::Resource>
+A class for a gocardless redirect flow, extends L<Business::GoCardless::PreAuthorization>
 
 =cut
 
@@ -14,14 +14,12 @@ use strict;
 use warnings;
 
 use Moo;
+extends 'Business::GoCardless::PreAuthorization';
 
-extends 'Business::GoCardless::Resource';
+use Business::GoCardless::Exception;
 
 =head1 ATTRIBUTES
 
-    id
-    description
-    created_at
     redirect_url
     scheme
     session_token
@@ -31,9 +29,6 @@ extends 'Business::GoCardless::Resource';
 =cut
 
 has [ qw/
-    id
-    description
-    created_at
     redirect_url
     scheme
     session_token
@@ -55,6 +50,12 @@ features, bug fixes, or anything else then please raise an issue / pull request:
     https://github.com/Humanstate/business-gocardless
 
 =cut
+
+sub cancel {
+	Business::GoCardless::Exception->throw({
+		message => "->cancel on a RedirectFlow is not meaningful in the Pro API",
+	});
+}
 
 1;
 

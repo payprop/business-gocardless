@@ -63,67 +63,63 @@ my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/redirect_flow.
 note explain $confirm_resource_data;
 
 isa_ok(
-    my $Payment = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
+    my $Bill = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
     'Business::GoCardless::Payment'
 );
 
-ok( $Payment->cancel,'cancel payment' );
-ok( $Payment->cancelled,'payment cancelled' );
+ok( $Bill->cancel,'cancel bill' );
+ok( $Bill->cancelled,'bill cancelled' );
 
-my $NewPayment = $GoCardless->payment( $Payment->id );
-is( $NewPayment->id,$Payment->id,'getting payment with same id gives same payment' );
+my $NewBill = $GoCardless->bill( $Bill->id );
+is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
 
-my $Paginator = $GoCardless->payments(
+my $Paginator = $GoCardless->bills(
+	# TOOD: args here
 );
 
 note explain $Paginator->info if $DEBUG;
 
-while ( my @payments = $Paginator->next ) {
+while ( my @bills = $Paginator->next ) {
 	pass( 'Paginator->next' );
 	if ( $DEBUG ) {
-		note scalar( @payments );
-		note explain [ map { $_->id } @payments ];
+		note scalar( @bills );
+		note explain [ map { $_->id } @bills ];
 	}
 }
 
-exit;
-
 my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
-    max_amount         => 100,
-    interval_length    => 10,
-    interval_unit      => 'day',
-    expires_at         => '2020-01-01',
-    name               => "Test PreAuthorization",
-    description        => "Test PreAuthorization for testing",
+	session_token        => 'bar',
+	description          => "Test Pre Auth",
+    success_redirect_url => "http://localhost:3000/rflow/confirm/pre_auth/100/EUR",
 );
 
 _post_to_gocardless( $new_pre_auth_url,'pre_authorization' );
 $confirm_resource_data = _get_confirm_resource_data(
-    "$tmp_dir/pre_authorization.json"
+    "$tmp_dir/redirect_flow.json"
 );
 isa_ok(
     my $PreAuthorization = $GoCardless->confirm_resource(
         %{ $confirm_resource_data }
     ),
-    'Business::GoCardless::PreAuthorization'
+    'Business::GoCardless::RedirectFlow'
 );
 
-$Payment = $PreAuthorization->payment( amount => 100 );
-$PreAuthorization->cancel;
-$GoCardless->pre_authorizations;
+ok( $Bill = $PreAuthorization->bill(
+	amount   => 100,
+	currency => 'EUR',
+),'PreAuthorization->bill' );
+ok( $Bill->cancel,'->cancel' );
 
 my $new_subscription_url = $GoCardless->new_subscription_url(
-    amount             => 100,
-    interval_length    => 1,
-    interval_unit      => 'month',
-    name               => "Test Subscription",
-    description        => "Test Subscription for testing",
-    start_at           => strftime( "%Y-12-31",gmtime ),
+	session_token        => 'bar',
+	description          => "Test Subscription",
+    success_redirect_url => "http://localhost:3000/rflow/confirm/subscription"
+		. "/100/EUR/monthly/1/" . strftime( "%Y-12-31",gmtime ),
 );
 
 _post_to_gocardless( $new_subscription_url,'subscription' );
 $confirm_resource_data = _get_confirm_resource_data(
-    "$tmp_dir/subscription.json"
+    "$tmp_dir/redirect_flow.json"
 );
 
 isa_ok(
@@ -133,12 +129,16 @@ isa_ok(
     'Business::GoCardless::Subscription'
 );
 
-$Subscription = $GoCardless->subscription( $Subscription->id );
-$Subscription->cancel;
+isa_ok(
+	$Subscription = $GoCardless->subscription( $Subscription->id ),
+	'Business::GoCardless::Subscription'
+);
+
+ok( $Subscription->cancel,'->cancel' );
 
 my @users = $GoCardless->users;
 my $User = $users[0];
-isa_ok( $User,'Business::GoCardless::User' );
+isa_ok( $User,'Business::GoCardless::Customer' );
 
 done_testing();
 

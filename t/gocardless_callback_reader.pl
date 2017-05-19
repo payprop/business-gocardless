@@ -38,7 +38,13 @@ get '/merchants/:mid/confirm_resource' => sub {
     );
 };
 
-get '/rflow/confirm/:type/:amount/:currency' => sub {
+get '/rflow/confirm/:type/:amount/:currency/:interval_unit/:interval/:start_at'
+    => {
+        interval_unit => undef,
+        interval      => undef,
+        start_at      => undef,
+    }
+    => sub {
     my ( $c ) = @_;
 
     my %output;
@@ -48,6 +54,9 @@ get '/rflow/confirm/:type/:amount/:currency' => sub {
         type
         amount
         currency
+        interval_unit
+        interval
+        start_at
     / ) {
         $output{$_} = $c->param( $_ )
             if defined $c->param( $_ );

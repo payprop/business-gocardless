@@ -96,7 +96,13 @@ sub _operation {
 
     my $data = $self->client->$method( $uri,$params );
 
-    $data = $data->{payments} if ref( $self ) eq 'Business::GoCardless::Payment';
+    if ( $self->client->api_version > 1 ) {
+
+        $data = $data->{payments}
+            if ref( $self ) eq 'Business::GoCardless::Payment';
+        $data = $data->{subscriptions}
+            if ref( $self ) eq 'Business::GoCardless::Subscription';
+    }
 
     foreach my $attr ( keys( %{ $data } ) ) {
         $self->$attr( $data->{$attr} );

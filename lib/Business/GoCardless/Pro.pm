@@ -17,6 +17,12 @@ use Moo;
 extends 'Business::GoCardless';
 
 use Business::GoCardless::Payment;
+use Business::GoCardless::RedirectFlow;
+use Business::GoCardless::Subscription;
+use Business::GoCardless::Customer;
+use Business::GoCardless::Webhook::V2;
+
+use Business::GoCardless::Exception
 
 has api_version => (
     is       => 'ro',
@@ -24,10 +30,116 @@ has api_version => (
     default  => sub { 2 },
 );
 
-# BACK COMPATIBILITY wrapper around _new_redirect_flow_url, will
-# translate Basic API new_bill_url params to those required for
-# the /redirect_flows endpoint
+sub payment {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Payment','payments' );
+}
+
+sub payments {
+	my ( $self,%filters ) = @_;
+	return $self->_list( 'payments',\%filters );
+}
+
+sub subscription {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Subscription','subscriptions' );
+}
+
+sub subscriptions {
+    my ( $self,%filters ) = @_;
+	return $self->_list( 'subscriptions',\%filters );
+}
+
+sub pre_authorization {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'RedirectFlow','redirect_flows' );
+};
+
+sub pre_authorizations {
+	Business::GoCardless::Exception->throw({
+		message => "->pre_authorizations is no longer meaningful in the Pro API",
+	});
+};
+
+sub customer {
+    my ( $self,$id ) = @_;
+    return $self->_generic_find_obj( $id,'Customer','customer' );
+}
+
+sub customers {
+	my ( $self,%filters ) = @_;
+	return $self->_list( 'customers',\%filters );
+}
+
+sub webhook {
+	my ( $self,$data,$signature ) = @_;
+
+    return Business::GoCardless::Webhook::V2->new(
+        client     => $self->client,
+        json       => $data,
+		# load ordering handled by setting _signature rather than signature
+		# signature will be set in the json trigger
+		_signature => $signature,
+    );
+}
+
+sub _list {
+    my ( $self,$endpoint,$filters ) = @_;
+
+    my $class = {
+        payments       => 'Payment',
+		redirect_flows => 'RedirectFlow',
+		customers      => 'Customer',
+		subscriptions  => 'Subscription',
+    }->{ $endpoint };
+
+    $filters //= {};
+
+    my $uri = "/$endpoint";
+
+    if ( keys( %{ $filters } ) ) {
+        $uri .= '?' . $self->client->normalize_params( $filters );
+    }
+
+    my ( $data,$links,$info ) = $self->client->api_get( $uri );
+
+    $class = "Business::GoCardless::$class";
+    my @objects = map { $class->new( client => $self->client,%{ $_ } ) }
+        @{ $data->{$endpoint} };
+
+    return wantarray ? ( @objects ) : Business::GoCardless::Paginator->new(
+        class   => $class,
+        client  => $self->client,
+        links   => $links,
+        info    => $info ? JSON->new->decode( $info ) : {},
+        objects => \@objects,
+    );
+}
+
+################################################################
+#
+# BACK COMPATIBILITY SECTION FOLLOWS
+# the Pro version of the API is built on "redirect flows" when
+# using their hosted pages, so we can make it back compatible
+#
+################################################################
+
 sub new_bill_url {
+	my ( $self,%params ) = @_;
+	return $self->_redirect_flow_from_legacy_params( %params );
+}
+
+sub new_pre_authorization_url {
+	my ( $self,%params ) = @_;
+	return $self->_redirect_flow_from_legacy_params( %params );
+}
+
+sub new_subscription_url {
+	my ( $self,%params ) = @_;
+	return $self->_redirect_flow_from_legacy_params( %params );
+}
+
+sub _redirect_flow_from_legacy_params {
     my ( $self,%params ) = @_;
 
 	for ( qw/ session_token success_redirect_url / ) {
@@ -64,6 +176,7 @@ sub new_bill_url {
 	});
 }
 
+
 # BACK COMPATIBILITY method, in which we (try to) return the correct object for
 # the required type as this is how the v1 API works
 sub confirm_resource {
@@ -77,14 +190,17 @@ sub confirm_resource {
 	my $type      = $params{type};
 	my $amount    = $params{amount};
 	my $currency  = $params{currency};
+	my $int_unit  = $params{interval_unit};
+	my $interval  = $params{interval};
+	my $start_at  = $params{start_at};
 
     if ( my $RedirectFlow = $self->client->_confirm_redirect_flow( $r_flow_id ) ) {
+
 		# now we have a confirmed redirect flow object we can create the
 		# payment, subscription, whatever
-
 		if ( $type =~ /bill|payment/i ) {
-			# Bill -> Payment
 
+			# Bill -> Payment
 			my $post_data = {
 				payments => {
 					amount   => $amount,
@@ -101,51 +217,46 @@ sub confirm_resource {
 				client => $self->client,
 				%{ $data->{payments} },
 			);
+
+		} elsif ( $type =~ /pre_auth/i ) {
+
+			# a pre authorization is, effectively, a redirect flow
+			return $RedirectFlow;
+
+		} elsif ( $type =~ /subscription/i ) {
+
+			my $post_data = {
+				subscriptions => {
+					amount        => $amount,
+					currency      => $currency,
+					interval_unit => $int_unit,
+					interval      => $interval,
+					start_date    => $start_at,
+					links => {
+						mandate => $RedirectFlow->links->{mandate},
+					},
+				},
+			};
+
+			my $data = $self->client->api_post( "/subscriptions",$post_data );
+
+			return Business::GoCardless::Subscription->new(
+				client => $self->client,
+				%{ $data->{subscriptions} },
+			);
 		}
 
-	} else {
-
+		# don't know what to do, complain
+		Business::GoCardless::Exception->throw({
+			message => "Unkown type ($type) in ->confirm_resource",
+		});
 	}
+
+	Business::GoCardless::Exception->throw({
+		message => "Failed to get RedirectFlow for $r_flow_id",
+	});
 }
 
-sub payment {
-    my ( $self,$id ) = @_;
-    return $self->_generic_find_obj( $id,'Payment','payments' );
-}
-
-sub payments {
-	my ( $self,%filters ) = @_;
-	return $self->_list( 'payments',\%filters );
-}
-
-sub _list {
-    my ( $self,$endpoint,$filters ) = @_;
-
-    my $class = {
-        payments => 'Payment',
-    }->{ $endpoint };
-
-    $filters //= {};
-
-    my $uri = "/$endpoint";
-
-    if ( keys( %{ $filters } ) ) {
-        $uri .= '?' . $self->client->normalize_params( $filters );
-    }
-
-    my ( $data,$links,$info ) = $self->client->api_get( $uri );
-
-    $class = "Business::GoCardless::$class";
-    my @objects = map { $class->new( client => $self->client,%{ $_ } ) }
-        @{ $data->{$endpoint} };
-
-    return wantarray ? ( @objects ) : Business::GoCardless::Paginator->new(
-        class   => $class,
-        client  => $self->client,
-        links   => $links,
-        info    => $info ? JSON->new->decode( $info ) : {},
-        objects => \@objects,
-    );
-}
+sub users { shift->customers( @_ ); }
 
 1;

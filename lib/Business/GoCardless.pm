@@ -280,13 +280,23 @@ sub new_bill_url {
 
 sub bill {
     my ( $self,$id ) = @_;
-    return $self->_generic_find_obj( $id,'Bill' );
+
+    if ( $self->client->api_version > 1 ) {
+        return $self->payment( $id );
+    } else {
+        return $self->_generic_find_obj( $id,'Bill' );
+    }
 }
 
 sub bills {
     my ( $self,%filters ) = @_;
-    return $self->merchant( $self->client->merchant_id )
-        ->bills( \%filters );
+
+    if ( $self->client->api_version > 1 ) {
+        return $self->payments( %filters );
+    } else {
+        return $self->merchant( $self->client->merchant_id )
+            ->bills( \%filters );
+    }
 }
 
 =head1 Merchant Methods

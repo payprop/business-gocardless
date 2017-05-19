@@ -52,7 +52,9 @@ has message => (
 
             if ( ref( $message ) eq 'HASH' ) {
                 my $error = delete( $message->{error} ) // "Unknown error";
-                return ref( $error ) ? join( ', ',@{ $error } ) : $error;
+                return ref( $error ) eq 'ARRAY'
+                    ? join( ', ',@{ $error } ) : ref( $error ) eq 'HASH'
+                    ? $error->{message}        : $error;
             } else {
                 return join( ', ',@{ $message } );
             }
