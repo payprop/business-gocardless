@@ -52,9 +52,23 @@ has message => (
 
             if ( ref( $message ) eq 'HASH' ) {
                 my $error = delete( $message->{error} ) // "Unknown error";
-                return ref( $error ) eq 'ARRAY'
-                    ? join( ', ',@{ $error } ) : ref( $error ) eq 'HASH'
-                    ? $error->{message}        : $error;
+
+                if ( ref( $error ) eq 'HASH' ) {
+
+                    my $mess = $error->{message};
+
+                    foreach my $sub_error ( @{ $error->{errors} // [] } ) {
+                        $mess .= ' / ' . $sub_error->{message};
+                    }
+
+                    return $mess . " << $mess >> ";
+
+                } elsif ( ref( $error ) eq 'ARRAY' ) {
+                    return join( ', ',@{ $error } );
+                } else {
+                    return $error;
+                }
+
             } else {
                 return join( ', ',@{ $message } );
             }

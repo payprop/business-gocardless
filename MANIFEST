@@ -1,11 +1,11 @@
 Changes
 lib/Business/GoCardless.pm
-lib/Business/GoCardless/Upgrading.pod
 lib/Business/GoCardless/Basic.pm
 lib/Business/GoCardless/Bill.pm
 lib/Business/GoCardless/Client.pm
 lib/Business/GoCardless/Exception.pm
 lib/Business/GoCardless/Merchant.pm
+lib/Business/GoCardless/Mandate.pm
 lib/Business/GoCardless/Paginator.pm
 lib/Business/GoCardless/Payment.pm
 lib/Business/GoCardless/Payout.pm
@@ -13,9 +13,12 @@ lib/Business/GoCardless/PreAuthorization.pm
 lib/Business/GoCardless/Pro.pm
 lib/Business/GoCardless/Resource.pm
 lib/Business/GoCardless/Subscription.pm
+lib/Business/GoCardless/Upgrading.pod
 lib/Business/GoCardless/User.pm
 lib/Business/GoCardless/Utils.pm
 lib/Business/GoCardless/Webhook.pm
+lib/Business/GoCardless/Webhook/V2.pm
+lib/Business/GoCardless/Webhook/Event.pm
 lib/Business/GoCardless/Version.pm
 Makefile.PL
 MANIFEST
