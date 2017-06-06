@@ -2,7 +2,7 @@ package Business::GoCardless::Pro;
 
 =head1 NAME
 
-Business::GoCardless::Pro - Perl library for interacting with the GoCardless Pro v1 API
+Business::GoCardless::Pro - Perl library for interacting with the GoCardless Pro v2 API
 (https://gocardless.com)
 
 =head1 DESCRIPTION
