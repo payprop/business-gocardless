@@ -135,6 +135,23 @@ Get a list of Payment objects (%filter is optional)
 
     my @payments = $GoCardless->payments( %filter );
 
+=head2 create_payment
+
+Create a payment with the passed params
+
+    my $Payment = $GoCardless->create_payment(
+        "amount"      => 100,
+        "currency"    => "GBP",
+        "charge_date" => "2014-05-19",
+        "reference"   => "WINEBOX001",
+        "metadata"    => {
+          "order_dispatch_date" => "2014-05-22"
+        },
+        "links" => {
+          "mandate"   => "MD123"
+        }
+    );
+
 =cut
 
 sub payment {
@@ -145,6 +162,16 @@ sub payment {
 sub payments {
     my ( $self,%filters ) = @_;
     return $self->_list( 'payments',\%filters );
+}
+
+sub create_payment {
+    my ( $self,%params ) = @_;
+    my $data = $self->client->api_post( '/payments',{ payments => { %params } } );
+
+    return Business::GoCardless::Payment->new(
+        client => $self->client,
+        %{ $data->{payments} }
+    );
 }
 
 =head1 Subscription Methods

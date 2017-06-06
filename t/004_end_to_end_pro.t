@@ -104,6 +104,18 @@ isa_ok(
     'Business::GoCardless::RedirectFlow'
 );
 
+isa_ok(
+	my $Payment = $GoCardless->create_payment(
+		amount   => 100,
+		currency => 'EUR',
+		links    => { mandate => $PreAuthorization->links->{mandate} },
+	),
+	'Business::GoCardless::Payment',
+	'->create_payment',
+);
+
+note explain $Payment;
+
 ok( $Bill = $PreAuthorization->bill(
 	amount   => 100,
 	currency => 'EUR',

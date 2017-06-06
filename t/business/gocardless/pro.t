@@ -80,6 +80,17 @@ sub test_payment {
 
     my ( $GoCardless,$mock ) = @_;
 
+    $mock->mock(
+        'content',
+        sub { '{"payments":{' . _payment_json_internal() . '}}' }
+    );
+
+    isa_ok(
+        my $Payment = $GoCardless->create_payment,
+        'Business::GoCardless::Payment',
+        '->create_payment',
+    );
+
     $mock->mock( 'content',sub { _redirect_flow_json() } );
 
     note( "Bill" );
