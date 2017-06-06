@@ -40,7 +40,7 @@ cmp_deeply(
           'api_version' => 1,
           'base_url' => 'https://gocardless.com',
           'token' => 'foo',
-          'user_agent' => 'business-gocardless/perl/v0.16_01-1',
+          'user_agent' => ignore(),
           'webhook_secret' => 'bar'
         }, 'Business::GoCardless::Client' ),
         'created_at' => '2014-08-04T12:00:00.000Z',

@@ -428,7 +428,7 @@ sub _user_obj {
     'api_version' => 2,
     'base_url' => 'https://api.gocardless.com',
     'token' => 'MvYX0i6snRh/1PXfPoc6',
-    'user_agent' => 'business-gocardless/perl/v0.16_01-2'
+    'user_agent' => ignore(),
   }, 'Business::GoCardless::Client' ),
   'country_code' => 'GB',
   'created_at' => '2014-05-08T17:01:06.000Z',
@@ -516,7 +516,7 @@ return bless( {
     'api_version' => 2,
     'base_url' => 'https://api.gocardless.com',
     'token' => 'MvYX0i6snRh/1PXfPoc6',
-    'user_agent' => 'business-gocardless/perl/v0.16_01-2'
+    'user_agent' => ignore(),
   }, 'Business::GoCardless::Client' ),
   'created_at' => '2014-10-20T17:01:06.000Z',
   'currency' => 'GBP',
@@ -596,7 +596,7 @@ bless( {
     'api_version' => 2,
     'base_url' => 'https://api.gocardless.com',
     'token' => 'MvYX0i6snRh/1PXfPoc6',
-    'user_agent' => 'business-gocardless/perl/v0.16_01-2'
+    'user_agent' => ignore(),
   }, 'Business::GoCardless::Client' ),
   'created_at' => '2014-10-22T13:10:06.000Z',
   'description' => 'Wine boxes',
