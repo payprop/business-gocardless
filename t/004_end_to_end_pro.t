@@ -11,13 +11,15 @@ use LWP::Simple;
 use Business::GoCardless::Pro;
 use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
-use Mojo::UserAgent;
 
 use FindBin qw/ $Bin /;
 my $tmp_dir = "$Bin/end_to_end";
 
 plan skip_all => "GOCARDLESS_ENDTOEND required"
     if ! $ENV{GOCARDLESS_ENDTOEND};
+
+eval 'use Mojo::UserAgent';
+$@ && plan skip_all => "Install Mojolicious to run this test";
 
 # this is an "end to end" test - it will call the gocardless API
 # using the details defined in the ENV variables below. you need
