@@ -243,6 +243,12 @@ sub test_pre_authorization {
         _redirect_flow_obj(),
         '->pre_authorization returns a Business::GoCardless::PreAuthorization object'
     );
+
+    throws_ok(
+        sub { $GoCardless->pre_authorizations },
+        'Business::GoCardless::Exception',
+        "->pre_authorizations is no longer meaningful in the Pro API",
+    );
 }
 
 sub test_subscription {
@@ -333,7 +339,10 @@ sub test_user {
         sub { '{"customers":[' . _user_json() . ',' . _user_json() . ']}' }
     );
 
+    my @customers = $GoCardless->customers;
     my @users = $GoCardless->users;
+
+    cmp_deeply( [ @customers ],[ @users ],'->customers === ->users' );
 
     cmp_deeply(
         \@users,
@@ -341,6 +350,11 @@ sub test_user {
         '->users returns an array of Business::GoCardless::User objects'
     );
 
+    isa_ok(
+        $GoCardless->customer( 1 ),
+        'Business::GoCardless::Customer',
+        '->customer'
+    );
 }
 
 sub test_webhook {

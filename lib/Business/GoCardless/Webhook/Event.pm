@@ -20,6 +20,9 @@ extends 'Business::GoCardless::Resource';
 with 'Business::GoCardless::Utils';
 
 use Business::GoCardless::Exception;
+use Business::GoCardless::Payment;
+use Business::GoCardless::Subscription;
+use Business::GoCardless::Mandate;
 
 =head1 ATTRIBUTES
 

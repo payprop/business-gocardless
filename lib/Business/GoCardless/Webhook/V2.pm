@@ -10,6 +10,8 @@ A class for gocardless webhooks, extends L<Business::GoCardless::Resource>.
 For more details see the gocardless API documentation specific to webhooks:
 https://developer.gocardless.com/api-reference/#appendix-webhooks
 
+Note to use webhooks you must set the webhook_secret on the client object
+
 =cut
 
 use strict;

@@ -32,7 +32,8 @@ when given the necessary ENV variables.
     my $GoCardless = Business::GoCardless::Pro->new(
         token           => $your_gocardless_token
         client_details  => {
-            base_url    => $gocardless_url, # defaults to https://api.gocardless.com
+            base_url       => $gocardless_url, # defaults to https://api.gocardless.com
+            webhook_secret => $secret,
         },
     );
 
