@@ -11,7 +11,7 @@ set of modules
 
 =head1 VERSION
 
-0.16
+0.18
 
 =head1 DESCRIPTION
 

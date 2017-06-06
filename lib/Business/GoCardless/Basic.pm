@@ -5,10 +5,6 @@ package Business::GoCardless::Basic;
 Business::GoCardless - Perl library for interacting with the GoCardless Basic v1 API
 (https://gocardless.com)
 
-=head1 VERSION
-
-0.16
-
 =head1 DESCRIPTION
 
 Module for interacting with the GoCardless Basic (v1) API. Please note this

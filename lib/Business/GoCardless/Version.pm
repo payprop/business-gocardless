@@ -15,7 +15,7 @@ use warnings;
 
 use Moo::Role;
 
-$Business::GoCardless::VERSION     = '0.17';
+$Business::GoCardless::VERSION     = '0.18';
 
 =head1 AUTHOR
 

@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.18     2017-06-06
+        - Fix documentation typos
+
 0.17     2017-06-06
         - Add support for some functionality in the v2 (Pro) API
         - Add classes and tests to support the v2 (Pro) API

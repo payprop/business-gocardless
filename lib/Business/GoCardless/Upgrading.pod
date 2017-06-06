@@ -15,7 +15,7 @@ to hosted pages and then retrieving data + webhooks.
 
 GoCardless released the v2 (Pro) API sometime in 2015. This is a much more feature rich
 API and allows much more control from the client side without the need for hosted pages.
-The interface was also cleanup, simplified, and some terminology was changed.
+The interface was also cleaned up, simplified, and some terminology was changed.
 
 GoCardless decided to deprecate the v1 API in 2017. The v2 API still features hosted
 pages, now called "redirect flows" so it is possible to migrate to the v2 API without
