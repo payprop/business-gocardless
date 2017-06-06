@@ -121,6 +121,23 @@ but also C<users> will just pass through to C<customers>.
 Webhook is Webhook::V2 in the ::Pro API as these have been changed to have C<events> so
 when examining a webhook you need to call C<events>.
 
+=head1 How do I continue to bill mandates (pre_authorizations) created in the v1 API?
+
+Call the create_payment method on the ::Pro class with the mandate id:
+
+    my $Payment = $GoCardless->create_payment(
+        amount   => 100, # note minor unites
+        currency => 'EUR',
+        links    => {
+            mandate => $mandate
+        },
+    );
+
+See L<https://developer.gocardless.com/api-reference/#payments-create-a-payment> for more
+information. Also see the C<Mandate restrictions> section in the GoCardless upgrading docs
+(L<https://support.gocardless.com/hc/en-us/articles/115000451505-Guide-to-upgrading>) as
+there are some considerations depending on the mandate type.
+
 =head1 AUTHOR
 
 Lee Johnson - C<leejo@cpan.org>
