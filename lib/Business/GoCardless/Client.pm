@@ -16,7 +16,6 @@ use warnings;
 
 use Moo;
 with 'Business::GoCardless::Utils';
-with 'Business::GoCardless::Version';
 
 use Business::GoCardless::Exception;
 use Business::GoCardless::Bill;
@@ -165,6 +164,7 @@ has user_agent => (
     default => sub {
         my ( $self ) = @_;
         # maybe want more info in here, version of perl, platform, and such
+        require Business::GoCardless;
         return "business-gocardless/perl/v"
             . $Business::GoCardless::VERSION
             . "-" . $self->api_version

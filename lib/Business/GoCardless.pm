@@ -11,7 +11,7 @@ set of modules
 
 =head1 VERSION
 
-0.18
+0.19
 
 =head1 DESCRIPTION
 
@@ -48,12 +48,12 @@ use strict;
 use warnings;
 
 use Moo;
-with 'Business::GoCardless::Version';
-
 use Carp qw/ confess /;
 
 use Business::GoCardless::Client;
 use Business::GoCardless::Webhook;
+
+$Business::GoCardless::VERSION = '0.19';
 
 has api_version => (
     is       => 'ro',

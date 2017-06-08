@@ -1,5 +1,11 @@
 Revision history for Business-GoCardless
 
+0.19     2017-06-08
+        - Fix documentation typos
+        - Fix VERSION confusion by moving $Business::GoCardless::VERSION
+          into the main module to avoid parts of the cpan(m|ts) toolchain
+          getting confused
+
 0.18     2017-06-06
         - Fix documentation typos
 

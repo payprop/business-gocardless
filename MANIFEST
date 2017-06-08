@@ -19,7 +19,6 @@ lib/Business/GoCardless/Utils.pm
 lib/Business/GoCardless/Webhook.pm
 lib/Business/GoCardless/Webhook/V2.pm
 lib/Business/GoCardless/Webhook/Event.pm
-lib/Business/GoCardless/Version.pm
 Makefile.PL
 MANIFEST
 README.md
