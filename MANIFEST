@@ -12,6 +12,7 @@ lib/Business/GoCardless/Payout.pm
 lib/Business/GoCardless/PreAuthorization.pm
 lib/Business/GoCardless/Pro.pm
 lib/Business/GoCardless/Resource.pm
+lib/Business/GoCardless/RedirectFlow.pm
 lib/Business/GoCardless/Subscription.pm
 lib/Business/GoCardless/Upgrading.pod
 lib/Business/GoCardless/User.pm

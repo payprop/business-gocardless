@@ -16,3 +16,4 @@ cover_db
 end_to_end.sh
 end_to_end_pro.sh
 *.html
+.DS_Store
