@@ -81,7 +81,7 @@ sub resources {
 	my $resource = $mapping->{ $self->resource_type };
 
 	$resource || Business::GoCardless::Exception->throw({
-		message => "Unkown resource_type (@{[$self->resource_type]}) in ->resources",
+		message => "Unknown resource_type (@{[$self->resource_type]}) in ->resources",
 	});
 
 	my $class_suffix = ucfirst( $resource );
