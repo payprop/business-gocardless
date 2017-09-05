@@ -19,23 +19,29 @@ extends 'Business::GoCardless::Resource';
 =head1 ATTRIBUTES
 
     amount
-    app_ids
-    bank_reference
+    arrival_date
     created_at
+    currency
+    deducted_fees
     id
-    paid_at
-    transaction_fees
+    links
+    payout_type
+    reference
+    status
 
 =cut
 
 has [ qw/
     amount
-    app_ids
-    bank_reference
+    arrival_date
     created_at
+    currency
+    deducted_fees
     id
-    paid_at
-    transaction_fees
+    links
+    payout_type
+    reference
+    status
 / ] => (
     is => 'rw',
 );
