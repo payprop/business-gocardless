@@ -74,6 +74,7 @@ sub resources {
 
 	my $mapping = {
 		payments      => 'payment',
+		payouts       => 'payout',
 		subscriptions => 'subscription',
 		mandates      => 'mandate',
 	};
