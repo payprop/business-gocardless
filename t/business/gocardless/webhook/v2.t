@@ -18,7 +18,7 @@ isa_ok(
             webhook_secret => 'bar',
         ),
         json => _json_payload(),
-        _signature => '07525beb4617490b433bd9036b97e856cefb041a6401e4f18b228345d34f5fc5',
+        _signature => 'd83ab95b082ac2d0154060fe63530723104d55249b00f1b49019859cbcd51078',
     ),
     'Business::GoCardless::Webhook::V2'
 );
@@ -31,11 +31,11 @@ can_ok(
     /,
 );
 
+ok( my $events = $Webhook->events,'->events' );
 cmp_deeply(
-    $Webhook->events,
-    [
-      bless( {
-        'action' => 'paid',
+    $events->[2],
+    bless( {
+        'action' => 'paid_out',
         'client' => bless( {
           'api_version' => 1,
           'base_url' => 'https://gocardless.com',
@@ -43,16 +43,23 @@ cmp_deeply(
           'user_agent' => ignore(),
           'webhook_secret' => 'bar'
         }, 'Business::GoCardless::Client' ),
-        'created_at' => '2014-08-04T12:00:00.000Z',
+        'created_at' => '2017-09-11T14:05:35.461Z',
         'endpoint' => '/events/%s',
-        'id' => 'EV123',
+        'id' => 'EV789',
         'links' => {
+          'parent_event' => 'EV123',
+          'payment' => 'PM456',
           'payout' => 'PO123'
         },
-        'resource_type' => 'payouts'
-      }, 'Business::GoCardless::Webhook::Event' )
-    ],
-    'events'
+        'details' => {
+          'cause' => 'payment_paid_out',
+          'description' => 'The payment has been paid out by GoCardless.',
+          'origin' => 'gocardless'
+        },
+        'resource_type' => 'payments'
+      }, 'Business::GoCardless::Webhook::Event'
+    ),
+    'more than one event'
 );
 
 $Webhook->signature( 'bad signature' );
@@ -71,20 +78,60 @@ sub _json_payload {
 
     my ( $signature ) = @_;
 
-    $signature //= '07525beb4617490b433bd9036b97e856cefb041a6401e4f18b228345d34f5fc5';
+    $signature //= 'd83ab95b082ac2d0154060fe63530723104d55249b00f1b49019859cbcd51078';
 
     return qq!{
-  "events": [
-    {
-      "id": "EV123",
-      "created_at": "2014-08-04T12:00:00.000Z",
-      "action": "paid",
-      "resource_type": "payouts",
-      "links": {
-        "payout": "PO123"
+   "events" : [
+      {
+         "action" : "paid",
+         "created_at" : "2017-09-11T14:05:35.414Z",
+         "details" : {
+            "cause" : "payout_paid",
+            "description" : "GoCardless has transferred the payout to the creditor's bank account.",
+            "origin" : "gocardless"
+         },
+         "id" : "EV123",
+         "links" : {
+            "payout" : "PO123"
+         },
+         "metadata" : {},
+         "resource_type" : "payouts"
+      },
+      {
+         "action" : "paid_out",
+         "created_at" : "2017-09-11T14:05:35.453Z",
+         "details" : {
+            "cause" : "payment_paid_out",
+            "description" : "The payment has been paid out by GoCardless.",
+            "origin" : "gocardless"
+         },
+         "id" : "EV456",
+         "links" : {
+            "parent_event" : "EV123",
+            "payment" : "PM123",
+            "payout" : "PO123"
+         },
+         "metadata" : {},
+         "resource_type" : "payments"
+      },
+      {
+         "action" : "paid_out",
+         "created_at" : "2017-09-11T14:05:35.461Z",
+         "details" : {
+            "cause" : "payment_paid_out",
+            "description" : "The payment has been paid out by GoCardless.",
+            "origin" : "gocardless"
+         },
+         "id" : "EV789",
+         "links" : {
+            "parent_event" : "EV123",
+            "payment" : "PM456",
+            "payout" : "PO123"
+         },
+         "metadata" : {},
+         "resource_type" : "payments"
       }
-    }
-  ]
+   ]
 }!;
 }
 
