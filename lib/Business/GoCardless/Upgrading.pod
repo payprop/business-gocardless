@@ -157,7 +157,7 @@ logic to check this:
 See the docs for L<Business::GoCardless::Webhook::V2> and
 L<Business::GoCardless::Webhook>. Note that to support this you will also need to
 make sure either you set the value of $ENV{'GOCARDLESS_APP_SECRET'} to your previous
-Basic API app_secret or your new webhook_secret is the same as your old app_secret.
+Basic API app_secret or your new webhook_secret is the same as your old app_secret otherwise signatures will not be valid.
 
 =head1 AUTHOR
 

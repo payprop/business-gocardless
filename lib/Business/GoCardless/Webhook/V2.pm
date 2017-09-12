@@ -29,7 +29,6 @@ use Business::GoCardless::Webhook::Event;
 =head1 ATTRIBUTES
 
     json
-    events
     signature
     has_legacy_data
 
@@ -49,11 +48,19 @@ has [ qw/
 
 =head1 Operations on a webhook
 
+=head2 events
+
+Get a list of L<Business::GoCardless::Webhook::Event> objects for processing:
+
+    foreach my $Event ( @{ $Webhook->events // [] } ) {
+        ...
+    }
+
 =head2 json
 
 Allows you to set the json data sent to you in the webhook:
 
-	$Webhook->json( $json_data )
+    $Webhook->json( $json_data )
 
 Will throw a L<Business::GoCardless::Exception> exception if the json fails to
 parse or if the signature does not match the payload data.
