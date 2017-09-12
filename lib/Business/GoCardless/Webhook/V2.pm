@@ -22,6 +22,7 @@ extends 'Business::GoCardless::Webhook';
 with 'Business::GoCardless::Utils';
 
 use JSON ();
+use Business::GoCardless::Client;
 use Business::GoCardless::Exception;
 use Business::GoCardless::Webhook::Event;
 
@@ -30,6 +31,7 @@ use Business::GoCardless::Webhook::Event;
     json
     events
     signature
+    has_legacy_data
 
 =cut
 
@@ -37,6 +39,9 @@ has [ qw/
     events
     signature
     _signature
+
+    has_legacy_data
+    legacy_webhook
 / ] => (
     is => 'rw',
 	clearer => 1,
@@ -73,31 +78,61 @@ has json => (
 			});
 		};
 
-        # coerce the events into objects
-		$self->events([
-            map { Business::GoCardless::Webhook::Event->new(
-				client => $self->client,
-                %{ $_ }
-            ) }
-            @{ $params->{events} }
-        ]);
+        if ( $params->{payload} ) {
 
-        $self->signature( $self->_signature ) if ! $self->signature;
+            # this is a legacy API webhook
+            $self->has_legacy_data( 1 );
 
-		if ( ! $self->signature_valid(
-            $json,$self->client->webhook_secret,$self->signature
-        ) ) {
-			$self->clear_events;
-			$self->clear_signature;
+            my $LegacyWebhook = Business::GoCardless::Webhook->new(
+                json   => $json,
+                client => Business::GoCardless::Client->new(
+                    app_secret => $self->client->webhook_secret, # bad assumption?
+                    %{ $self->client },
+                ),
+            );
 
-			Business::GoCardless::Exception->throw({
-				message  => "Invalid signature for webhook",
-			});
-		}
+            $self->legacy_webhook( $LegacyWebhook );
+
+        } else {
+
+            # coerce the events into objects
+            $self->events([
+                map { Business::GoCardless::Webhook::Event->new(
+                    client => $self->client,
+                    %{ $_ }
+                ) }
+                @{ $params->{events} }
+            ]);
+
+            $self->signature( $self->_signature ) if ! $self->signature;
+
+            if ( ! $self->signature_valid(
+                $json,$self->client->webhook_secret,$self->signature
+            ) ) {
+                $self->clear_events;
+                $self->clear_signature;
+
+                Business::GoCardless::Exception->throw({
+                    message  => "Invalid signature for webhook",
+                });
+            }
+        }
 
         return $json;
     }
 );
+
+=head2 is_legacy
+
+See if the webhook is a legacy (Basic API) webhook
+
+    if ( $Webhook->is_legacy ) {
+        ...
+    }
+
+=cut
+
+sub is_legacy { 0 }
 
 =head1 CONFIRMING WEBHOOKS
 
