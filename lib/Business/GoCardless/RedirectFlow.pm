@@ -20,6 +20,7 @@ use Business::GoCardless::Exception;
 
 =head1 ATTRIBUTES
 
+    confirmation_url
     redirect_url
     scheme
     session_token
@@ -29,6 +30,7 @@ use Business::GoCardless::Exception;
 =cut
 
 has [ qw/
+    confirmation_url
     redirect_url
     scheme
     session_token
