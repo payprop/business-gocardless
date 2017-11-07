@@ -93,6 +93,17 @@ my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
 	session_token        => 'bar',
 	description          => "Test Pre Auth",
     success_redirect_url => "http://localhost:3000/rflow/confirm/pre_auth/100/EUR",
+	user => {
+          'billing_address1' => '',
+          'billing_address2' => '',
+          'billing_postcode' => '',
+          'billing_town' => '',
+          'company_name' => '',
+          'country_code' => '',
+          'email' => 'foo@hotmail.com',
+          'first_name' => 'Lee',
+          'last_name' => "Perez de Armiñan",
+	}
 );
 
 _post_to_gocardless( $new_pre_auth_url,'pre_authorization' );
