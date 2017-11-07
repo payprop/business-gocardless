@@ -187,12 +187,12 @@ sub _post_to_gocardless {
 	my $account_params = {
 		'customer[email]'               => 'lee@g3s.ch',
 		'customer[given_name]'          => 'Lee',
-		'customer[family_name]'         => 'Johnson',
+		'customer[family_name]'         => 'Jøhñsön',
 		'customer[country_code]'        => 'FR',
 		'customer[bank_accounts][iban]' => 'FR1420041010050500013M02606',
 		'authenticity_token'            => $token,
 		'utf8'                          => '✓',
-		'customer[bank_accounts][account_holder_name]' => 'Lee Johnson',
+		'customer[bank_accounts][account_holder_name]' => 'Lee Jøhñsön',
 	};
 
 	note explain $account_params if $DEBUG;
