@@ -71,7 +71,7 @@ sub mandate {
 
     my $Mandate = Business::GoCardless::Mandate->new(
         client => $self->client,
-        id => $self->links->{mandate}
+        id => $self->links ? $self->links->{mandate} : undef,
     );
 
     return $Mandate->find_with_client( 'mandates' );

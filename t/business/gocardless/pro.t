@@ -49,6 +49,7 @@ can_ok(
         new_subscription_url
         confirm_resource
         users
+        webhooks
     /,
 );
 
@@ -74,6 +75,7 @@ test_pre_authorization( $GoCardless,$mock );
 test_subscription( $GoCardless,$mock );
 test_user( $GoCardless,$mock );
 test_webhook( $GoCardless,$mock );
+test_webhooks( $GoCardless,$mock );
 
 done_testing();
 
@@ -398,6 +400,12 @@ sub test_webhook {
         '07525beb4617490b433bd9036b97e856cefb041a6401e4f18b228345d34f5fc5'
     );
     isa_ok( $Webhook,'Business::GoCardless::Webhook' );
+    isa_ok( my $Payout = $Webhook->events->[0]->resources,'Business::GoCardless::Payout' );
+    cmp_deeply(
+        $Payout->links,
+        { payout => 'PO123' },
+        'has links set',
+    );
 
     ok( my @events = $Webhook->events,'->events' );
 
@@ -406,6 +414,28 @@ sub test_webhook {
         'Business::GoCardless::Exception',
         '->webhook checks signature',
     );
+}
+
+sub test_webhooks {
+
+    my ( $GoCardless,$mock ) = @_;
+
+    $ENV{GOCARDLESS_DEV_TESTING} = 0;
+
+    note( "Webhooks" );
+
+    $mock->mock( 'content',sub { _webhooks_payload() } );
+
+    foreach my $Webhook ( $GoCardless->webhooks ) {
+        isa_ok( $Webhook,'Business::GoCardless::Webhook::V2' );
+        foreach my $Event ( $Webhook->events->@* ) {
+            isa_ok( $Event,'Business::GoCardless::Webhook::Event' );
+            foreach my $Resource ( $Event->resources ) {
+                isa_ok( $Resource,'Business::GoCardless::Resource' );
+                ok( keys $Resource->links->%*,'resource has ->links' );
+            }
+        }
+    }
 }
 
 sub _user_json {
@@ -933,6 +963,43 @@ sub _mandate_json {
             }
         }
     }!;
+}
+
+sub _webhooks_payload {
+
+    return qq!{
+    "webhooks": [
+    {
+      "id": "WB0085HZ1WH7W1",
+      "created_at": "2024-01-30T00:07:34.440Z",
+      "url": "https://uk.payprop.com/gocardless",
+      "request_headers": {
+        "Origin": "https://api.gocardless.com",
+        "User-Agent": "gocardless-webhook-service/1.2",
+        "Content-Type": "application/json",
+        "Webhook-Signature": "cd4f475c68565fcc094bf2ac8a51f986ba4c48346db209decb8242b0a2efa3e5"
+      },
+      "request_body": "{\\"events\\":[{\\"id\\":\\"EV04MYKFN48T3B\\",\\"created_at\\":\\"2024-01-30T00:07:26.881Z\\",\\"resource_type\\":\\"mandates\\",\\"action\\":\\"cancelled\\",\\"metadata\\":{},\\"details\\":{\\"origin\\":\\"bank\\",\\"cause\\":\\"mandate_cancelled\\",\\"scheme\\":\\"bacs\\",\\"reason_code\\":\\"ADDACS-1\\",\\"description\\":\\"The mandate was cancelled at a bank branch.\\"},\\"links\\":{\\"mandate\\":\\"MD001HC9492JB4\\"},\\"resource_metadata\\":{}},{\\"id\\":\\"EV04MYKFNEDTPN\\",\\"created_at\\":\\"2024-01-30T00:07:27.093Z\\",\\"resource_type\\":\\"mandates\\",\\"action\\":\\"cancelled\\",\\"metadata\\":{},\\"details\\":{\\"origin\\":\\"bank\\",\\"cause\\":\\"mandate_cancelled\\",\\"scheme\\":\\"bacs\\",\\"reason_code\\":\\"ADDACS-1\\",\\"description\\":\\"The mandate was cancelled at a bank branch.\\"},\\"links\\":{\\"mandate\\":\\"MD001835DBG0XY\\"},\\"resource_metadata\\":{}},{\\"id\\":\\"EV04MYKFN9QW1E\\",\\"created_at\\":\\"2024-01-30T00:07:26.953Z\\",\\"resource_type\\":\\"payments\\",\\"action\\":\\"cancelled\\",\\"metadata\\":{},\\"details\\":{\\"origin\\":\\"bank\\",\\"cause\\":\\"mandate_cancelled\\",\\"scheme\\":\\"bacs\\",\\"reason_code\\":\\"ADDACS-1\\",\\"description\\":\\"The mandate for this payment was cancelled at a bank branch.\\"},\\"links\\":{\\"parent_event\\":\\"EV04MYKFN48T3B\\",\\"payment\\":\\"PM00ZKJZ0T2TEZ\\"},\\"resource_metadata\\":{}},{\\"id\\":\\"EV04MYKFNN1ZEH\\",\\"created_at\\":\\"2024-01-30T00:07:27.161Z\\",\\"resource_type\\":\\"payments\\",\\"action\\":\\"cancelled\\",\\"metadata\\":{},\\"details\\":{\\"origin\\":\\"bank\\",\\"cause\\":\\"mandate_cancelled\\",\\"scheme\\":\\"bacs\\",\\"reason_code\\":\\"ADDACS-1\\",\\"description\\":\\"The mandate for this payment was cancelled at a bank branch.\\"},\\"links\\":{\\"parent_event\\":\\"EV04MYKFNEDTPN\\",\\"payment\\":\\"PM00ZMEAF23QPM\\"},\\"resource_metadata\\":{}}],\\"meta\\":{\\"webhook_id\\":\\"WB0085HZ1WH7W1\\"}}",
+      "response_code": 204,
+      "response_body": "",
+      "response_body_truncated": false,
+      "response_headers": {
+        "date": "Tue, 30 Jan 2024 00:07:35 GMT",
+        "pragma": "no-cache",
+        "server": "Mojolicious (Perl)",
+        "connection": "close",
+        "content-type": "application/json;charset=UTF-8",
+        "cache-control": "no-store",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload"
+      },
+      "response_headers_content_truncated": false,
+      "response_headers_count_truncated": false,
+      "is_test": false,
+      "successful": true
+    }
+    ]
+}!;
 }
 
 # vim: ts=4:sw=4:et

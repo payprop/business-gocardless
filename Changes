@@ -1,5 +1,10 @@
 Revision history for Business-GoCardless
 
+0.41     2024-01-30
+        - Add webhooks method to top level class
+        - Add metadata attribute to RedirectFlow object
+        - Populate links attribute on webhook resources
+
 0.40     2024-01-26
         - Add payout_id, mandate_id, and creditor_id accessor to Payment object
 
