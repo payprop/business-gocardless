@@ -27,6 +27,7 @@ use Business::GoCardless::Mandate;
     session_token
     success_redirect_url
     links
+    metadata
 
 =cut
 
@@ -37,6 +38,7 @@ has [ qw/
     session_token
     success_redirect_url
     links
+    metadata
 / ] => (
     is => 'rw',
 );
