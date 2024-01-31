@@ -11,7 +11,7 @@ set of modules
 
 # VERSION
 
-0.41
+0.42
 
 # DESCRIPTION
 

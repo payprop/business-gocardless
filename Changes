@@ -1,5 +1,8 @@
 Revision history for Business-GoCardless
 
+0.42     2024-02-01
+        - Bump minimum Perl version to 5.20.0
+
 0.41     2024-01-30
         - Add webhooks method to top level class
         - Add metadata attribute to RedirectFlow object
