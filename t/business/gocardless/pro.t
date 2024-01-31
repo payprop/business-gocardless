@@ -3,9 +3,10 @@
 use strict;
 use warnings;
 use utf8;
+use feature qw/ postderef /;
 
 use Test::Most;
-use Test::Deep;
+no warnings qw/ experimental::postderef /;
 use Test::MockObject;
 use Test::Exception;
 use JSON;
