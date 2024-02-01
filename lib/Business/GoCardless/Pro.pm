@@ -328,6 +328,25 @@ sub webhook {
         : $webhook;
 }
 
+# payout methods are in the SUPER class
+=head1 Payout Methods
+
+See L<Business::GoCardless::Payout> for more information on Payout operations.
+
+=head2 payouts (B<pager>)
+
+Get a list of L<Business::GoCardless::Payout> objects.
+
+    my @payouts = $GoCardless->payouts
+
+=head2 payout
+
+Get an individual payout, returns a L<Business::GoCardless::Payout> object:
+
+    my $Payout = $GoCardless->payout( $id );
+
+=cut
+
 sub _list {
     my ( $self,$endpoint,$filters ) = @_;
 
@@ -337,6 +356,7 @@ sub _list {
         customers      => 'Customer',
         subscriptions  => 'Subscription',
         webhooks       => 'Webhook::V2',
+        payouts        => 'Payout',
     }->{ $endpoint };
 
     $filters //= {};
@@ -588,6 +608,8 @@ L<Business::GoCardless>
 L<Business::GoCardless::Resource>
 
 L<Business::GoCardless::Payment>
+
+L<Business::GoCardless::Payout>
 
 L<Business::GoCardless::Client>
 

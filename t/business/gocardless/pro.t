@@ -196,7 +196,7 @@ sub test_payout {
 
     note( "Payout" );
 
-    $mock->mock( 'content',sub { _payout_json() } );
+    $mock->mock( 'content',sub { '{"payouts":'._payout_json().'}' } );
     my $Payout = $GoCardless->payout( '0BKR1AZNJF' );
 
     cmp_deeply(
@@ -728,44 +728,75 @@ sub _pre_auth_json {
 
 sub _payout_json {
 
-    my ( $extra ) = @_;
-
-    $extra //= '';
-
-    return qq!{
-    $extra
-    "amount": "12.37",
-    "bank_reference": "JOHNSMITH-Z5DRM",
-    "created_at": "2013-05-10T16:34:34Z",
-    "id": "0BKR1AZNJF",
-    "paid_at": "2013-05-10T17:00:26Z",
-    "transaction_fees": "0.13"
-  }!;
+    return qq!
+{
+    "id": "PO123",
+    "amount": 1000,
+    "arrival_date": "2014-06-27",
+    "deducted_fees": 10,
+    "currency": "GBP",
+    "created_at": "2014-06-20T13:23:34.000Z",
+    "payout_type": "merchant",
+    "reference": "ref-1",
+    "status": "pending",
+    "fx": {
+      "fx_currency": "EUR",
+      "fx_amount": null,
+      "exchange_rate": null,
+      "estimated_exchange_rate": "1.11667"
+    },
+    "tax_currency": "GBP",
+    "metadata":{ "key": "value" },
+    "links": {
+      "creditor_bank_account": "BA123",
+      "creditor": "CR123"
+    }
+}
+!;
 
 }
 
 sub _payouts_json {
 
-    my $payout = _payout_json( '"app_ids": [ "ABC" ],' );
-    return qq{ [ $payout ] };
+    my $payout = _payout_json();
+    return qq!{ "payouts": [ $payout ] }!;
 }
 
 sub _payout_obj {
 
-    my ( $extra ) = @_;
-
-    $extra //= {};
-
     return bless( {
-     %{ $extra },
-     'amount' => '12.37',
-     'bank_reference' => 'JOHNSMITH-Z5DRM',
-     'client' => ignore(),
-     'created_at' => '2013-05-10T16:34:34Z',
-     'endpoint' => '/payouts/%s',
-     'id' => '0BKR1AZNJF',
-     'paid_at' => '2013-05-10T17:00:26Z',
-     'transaction_fees' => '0.13'
+  'amount' => 1000,
+  'arrival_date' => '2014-06-27',
+  'client' => bless( {
+    'api_path' => '',
+    'api_version' => 2,
+    'base_url' => 'https://api.gocardless.com',
+    'token' => 'MvYX0i6snRh/1PXfPoc6',
+    'user_agent' => ignore(),
+  }, 'Business::GoCardless::Client' ),
+  'created_at' => '2014-06-20T13:23:34.000Z',
+  'currency' => 'GBP',
+  'deducted_fees' => 10,
+  'endpoint' => '/payouts/%s',
+  'fx' => {
+    'estimated_exchange_rate' => '1.11667',
+    'exchange_rate' => undef,
+    'fx_amount' => undef,
+    'fx_currency' => 'EUR'
+  },
+  'id' => 'PO123',
+  'links' => {
+    'creditor' => 'CR123',
+    'creditor_bank_account' => 'BA123'
+  },
+  'metadata' => {
+    'key' => 'value'
+  },
+  'payout_type' => 'merchant',
+  'reference' => 'ref-1',
+  'status' => 'pending',
+  'tax_currency' => 'GBP'
+
    }, 'Business::GoCardless::Payout' );
 }
 
