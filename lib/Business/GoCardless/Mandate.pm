@@ -34,7 +34,7 @@ extends 'Business::GoCardless::Resource';
     scheme
     status
     verified_at
-    
+
 =cut
 
 has [ qw/
@@ -67,9 +67,9 @@ has [ qw/
 
 =head2 update
 
-    $Mandate->update( %params );
+    $Mandate = $Mandate->update( %params );
 
-note that you can only update the metadata on a mandate, so you must pass the params
+Returns the (updated) Mandate object. note that you can only update the metadata on a mandate, so you must pass the params
 hash as something that looks like:
 
     %params = ( metadata => { ... } );
@@ -80,11 +80,7 @@ sub cancel { shift->_operation( undef,'api_post',undef,'actions/cancel' ); }
 
 sub update {
     my ( $self,%params ) = @_;
-
-    return $self->client->api_put(
-        sprintf( $self->endpoint,$self->id ),
-        { mandates => { %params } },
-    );
+    return $self->_operation( undef,'api_put',{ mandates => { %params } } );
 }
 
 =head1 Status checks on a mandate

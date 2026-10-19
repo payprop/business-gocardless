@@ -10,7 +10,6 @@
 *.swp
 ~$
 /Business-GoCardless*tar.gz
-t/end_to_end/*.json
 t/end_to_end*.sh
 cover_db
 end_to_end.sh

@@ -26,8 +26,6 @@ WriteMakefile(
         'Test::Most'       => 0.31,
         'Test::Deep'       => 0.112,
         'Test::Exception'  => 0.32,
-        'FindBin'          => 0, # FindBin was first released with perl 5.00307
-        'LWP::Simple'      => 6.00,
         'Test::MockObject' => 1.20140408,
         'Try::Tiny'        => 0.22,
     },

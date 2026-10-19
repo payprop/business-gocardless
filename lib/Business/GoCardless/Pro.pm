@@ -77,9 +77,10 @@ when given the necessary ENV variables.
 =head1 PAGINATION
 
 Any methods marked as B<pager> have a dual interface, when called in list context
-they will return the first 100 resource objects, when called in scalar context they
-will return a L<Business::GoCardless::Paginator> object allowing you to iterate
-through all the objects:
+they will return the first page of resource objects (50 by default, you can pass
+a C<limit> filter of up to 500), when called in scalar context they will return a
+L<Business::GoCardless::Paginator> object allowing you to iterate through all the
+objects using the API's cursor based pagination:
 
     # get a list of L<Business::GoCardless::Payment> objects
     # (filter optional: https://developer.gocardless.com/#filtering)
@@ -100,6 +101,7 @@ use strict;
 use warnings;
 
 use Carp qw/ confess /;
+use Encode ();
 use Moo;
 extends 'Business::GoCardless';
 
@@ -253,7 +255,7 @@ See L<Business::GoCardless::Customer> for more information on Customer operation
 
 Get an individual customer, returns a L<Business::GoCardless::Customer>.
 
-    my $Customer = $GoCardless->customer;
+    my $Customer = $GoCardless->customer( $id );
 
 =head2 customers (B<pager>)
 
@@ -265,7 +267,7 @@ Get a list of L<Business::GoCardless::Customer> objects.
 
 sub customer {
     my ( $self,$id ) = @_;
-    return $self->_generic_find_obj( $id,'Customer','customer' );
+    return $self->_generic_find_obj( $id,'Customer','customers' );
 }
 
 sub customers {
@@ -360,37 +362,63 @@ sub _list {
     }->{ $endpoint };
 
     $filters //= {};
-
-    my $uri = "/$endpoint";
-
-    if ( keys( %{ $filters } ) ) {
-        $uri .= '?' . $self->client->normalize_params( $filters );
-    }
-
-    my ( $data,$links,$info ) = $self->client->api_get( $uri );
-
     $class = "Business::GoCardless::$class";
-    my @objects = map { $class->new(
-        client => $self->client,
 
-        # webhooks come back with stringified JSON
-        # so we need to further decode that
-        $endpoint eq 'webhooks'
-            ? (
-                json => $_->{request_body},
-                # load ordering handled by setting _signature rather than signature
-                # signature will be set in the json trigger
-                _signature => $_->{request_headers}{'Webhook-Signature'}
-            )
-            : ( %{ $_ } )
-    ); } @{ $data->{$endpoint} };
+    my $uri_for = sub {
+        my ( %cursor ) = @_;
 
-    return wantarray ? ( @objects ) : Business::GoCardless::Paginator->new(
-        class   => $class,
-        client  => $self->client,
-        links   => $links,
-        info    => $info ? JSON->new->decode( $info ) : {},
-        objects => \@objects,
+        # cursor params replace any passed in the original filters
+        my %params = ( %{ $filters },%cursor );
+        delete( @params{ grep { ! defined $params{$_} } keys %params } );
+
+        return keys( %params )
+            ? "/$endpoint?" . $self->client->normalize_params( \%params )
+            : "/$endpoint";
+    };
+
+    # the v2 API uses cursor based pagination, so we construct the links for
+    # next / previous / first from the meta data in each page of results
+    my $page_loader = sub {
+        my ( $uri ) = @_;
+
+        my ( $data ) = $self->client->api_get( $uri );
+        my $cursors  = $data->{meta}{cursors} // {};
+
+        my @objects = map { $class->new(
+            client => $self->client,
+
+            # webhooks come back with stringified JSON
+            # so we need to further decode that
+            $endpoint eq 'webhooks'
+                ? (
+                    %{ $_ }, # delivery details: id, url, response_code, etc
+                    # the signature is of the raw (UTF-8 encoded) request body
+                    json => Encode::encode_utf8( $_->{request_body} ),
+                    # load ordering handled by setting _signature rather than signature
+                    # signature will be set in the json trigger
+                    _signature => $_->{request_headers}{'Webhook-Signature'}
+                )
+                : ( %{ $_ } )
+        ); } @{ $data->{$endpoint} // [] };
+
+        my $links = {
+            first => $uri_for->( before => undef,after => undef ),
+            ( $cursors->{after}  ? ( next     => $uri_for->( after  => $cursors->{after},before => undef ) ) : () ),
+            ( $cursors->{before} ? ( previous => $uri_for->( before => $cursors->{before},after => undef ) ) : () ),
+        };
+
+        return ( \@objects,$links,$data->{meta} // {} );
+    };
+
+    my ( $objects,$links,$info ) = $page_loader->( $uri_for->() );
+
+    return wantarray ? ( @{ $objects } ) : Business::GoCardless::Paginator->new(
+        class       => $class,
+        client      => $self->client,
+        links       => $links,
+        info        => $info,
+        objects     => $objects,
+        page_loader => $page_loader,
     );
 }
 
@@ -407,17 +435,26 @@ sub _list {
 These methods are provided for those who want to move from the v1 (Basic)
 API with minimal changes in your application code.
 
-=head2 new_bill_url
-
-=head2 new_pre_authorization_url
-
-=head2 new_subscription_url
-
-Return a URL for redirecting the user to to complete a direct debit mandate that
-will allow you to setup payments.
+The new_bill_url, new_pre_authorization_url, and new_subscription_url methods
+all return a URL for redirecting the user to to complete a direct debit mandate
+that will allow you to setup payments, and they all take the same parameters.
 
 See L<https://developer.gocardless.com/api-reference/#redirect-flows-create-a-redirect-flow>
 for more information.
+
+=head2 new_bill_url
+
+Return a redirect flow URL for setting up a one off payment
+
+=head2 new_pre_authorization_url
+
+Return a redirect flow URL for setting up a mandate
+
+=head2 new_subscription_url
+
+Return a redirect flow URL for setting up a subscription
+
+All three methods take the following parameters:
 
     my $url = $GoCardless->new_bill_url(
 
@@ -551,7 +588,7 @@ sub confirm_resource {
                 payments => {
                     amount   => $amount,
                     currency => $currency,
-                    links    => $RedirectFlow->links // {},
+                    links    => { mandate => ( $RedirectFlow->links // {} )->{mandate} },
                 },
             };
 
@@ -576,7 +613,7 @@ sub confirm_resource {
                     interval_unit => $int_unit,
                     interval      => $interval,
                     start_date    => $start_at,
-                    links         => $RedirectFlow->links // {},
+                    links         => { mandate => ( $RedirectFlow->links // {} )->{mandate} },
                 },
             };
 

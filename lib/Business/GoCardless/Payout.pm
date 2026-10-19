@@ -64,6 +64,7 @@ has [ qw/
 
     pending
     paid
+    bounced
 
     if ( $Payout->paid ) {
         ...
@@ -73,6 +74,7 @@ has [ qw/
 
 sub pending     { return shift->status eq 'pending' }
 sub paid        { return shift->status eq 'paid' }
+sub bounced     { return shift->status eq 'bounced' }
 
 =head1 AUTHOR
 

@@ -7,32 +7,33 @@ use utf8;
 use Test::Most;
 use Test::Deep;
 use Test::Exception;
-use LWP::Simple;
 use Business::GoCardless::Pro;
-use JSON qw/ decode_json /;
 use POSIX qw/ strftime /;
-
-use FindBin qw/ $Bin /;
-my $tmp_dir = "$Bin/end_to_end";
 
 plan skip_all => "GOCARDLESS_ENDTOEND required"
     if ! $ENV{GOCARDLESS_ENDTOEND};
 
-eval 'use Mojo::UserAgent';
-$@ && plan skip_all => "Install Mojolicious to run this test";
-
 # this is an "end to end" test - it will call the gocardless API
-# using the details defined in the ENV variables below. you need
-# to run t/gocardless_callback_reader.pl allowing the callbacks
-# from gocardless to succeed, which feeds the details back into
-# this script (hence "end to end") - note that the redirect URI
-# and webhook URI in the sandbox/live developer settings will also
-# need to match that of the address running the script
+# using the details defined in the ENV variables below. it should
+# only be run against the sandbox as it creates (and cancels)
+# customers, mandates, payments, and subscriptions
+#
+# the hosted payment pages that a redirect flow sends the customer to
+# are now a javascript app backed by a billing request, so rather than
+# filling in a form we play the part of the customer by driving that
+# billing request through the API. fulfilling the billing request also
+# completes the redirect flow, after which the customer would be sent
+# back to the success_redirect_url with the redirect_flow_id
 my ( $token,$url,$DEBUG ) = @ENV{qw/
     GOCARDLESS_TOKEN
     GOCARDLESS_URL
-	GOCARDLESS_DEBUG
+    GOCARDLESS_DEBUG
 /};
+
+$url //= 'https://api-sandbox.gocardless.com';
+
+BAIL_OUT( "GOCARDLESS_URL must be the sandbox for the end to end test" )
+    if $url !~ /sandbox/;
 
 # this makes Business::GoCardless::Exception show a stack
 # trace when any error is thrown so i don't have to keep
@@ -50,22 +51,38 @@ my $GoCardless = Business::GoCardless::Pro->new(
 
 isa_ok( $GoCardless,'Business::GoCardless::Pro' );
 
+# the new_.*_url methods only return the URL, so keep hold of the
+# redirect flow that was created so we can act as the customer
+my $LastRedirectFlow;
+{
+    no warnings 'redefine';
+    my $orig = \&Business::GoCardless::Client::api_post;
+    *Business::GoCardless::Client::api_post = sub {
+        my ( $client,$path ) = @_;
+        my $data = $orig->( @_ );
+        $LastRedirectFlow = $data->{redirect_flows}
+            if $path eq '/redirect_flows';
+        return $data;
+    };
+}
+
 my $new_url = $GoCardless->new_bill_url(
-	session_token        => 'foo',
-	description          => "Test Bill",
-	# not sure about having the amount + currency in the redirect URL (what's
-	# to stop user from changing it?) but can't see any other way to be back
-	# compat with the Basic API
+    session_token        => 'foo',
+    description          => "Test Bill",
+    scheme               => 'bacs',
+    # not sure about having the amount + currency in the redirect URL (what's
+    # to stop user from changing it?) but can't see any other way to be back
+    # compat with the Basic API
     success_redirect_url => "http://localhost:3000/rflow/confirm/bill/100/GBP",
 );
 
-_post_to_gocardless( $new_url,'bill' );
-my $confirm_resource_data = _get_confirm_resource_data( "$tmp_dir/redirect_flow.json" );
-
-note explain $confirm_resource_data if $DEBUG;
+like( $new_url,qr/^https:\/\//,'->new_bill_url' );
+note( $new_url ) if $DEBUG;
 
 isa_ok(
-    my $Bill = $GoCardless->confirm_resource( %{ $confirm_resource_data } ),
+    my $Bill = $GoCardless->confirm_resource(
+        %{ _complete_redirect_flow( type => 'bill',amount => 100,currency => 'GBP' ) }
+    ),
     'Business::GoCardless::Payment'
 );
 
@@ -76,24 +93,31 @@ my $NewBill = $GoCardless->bill( $Bill->id );
 is( $NewBill->id,$Bill->id,'getting bill with same id gives same bill' );
 
 my $Paginator = $GoCardless->bills(
-	limit => 500,
+    limit => 50,
 );
 
 note explain $Paginator->info if $DEBUG;
 
+# don't page through the whole sandbox account, just check that we can
+# get more than one page (assuming there is more than one page)
+my $pages = 0;
 while ( my @bills = $Paginator->next ) {
-	pass( 'Paginator->next' );
-	if ( $DEBUG ) {
-		note scalar( @bills );
-		note explain [ map { $_->id } @bills ];
-	}
+    pass( 'Paginator->next' );
+    if ( $DEBUG ) {
+        note scalar( @bills );
+        note explain [ map { $_->id } @bills ];
+    }
+    last if ++$pages >= 3;
 }
 
+ok( $pages,'Paginator returned at least one page' );
+
 my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
-	session_token        => 'bar',
-	description          => "Test Pre Auth",
+    session_token        => 'bar',
+    description          => "Test Pre Auth",
+    scheme               => 'bacs',
     success_redirect_url => "http://localhost:3000/rflow/confirm/pre_auth/100/GBP",
-	user => {
+    user => {
           'billing_address1' => '',
           'billing_address2' => '',
           'billing_postcode' => '',
@@ -103,70 +127,102 @@ my $new_pre_auth_url = $GoCardless->new_pre_authorization_url(
           'email' => 'foo@hotmail.com',
           'first_name' => 'Lee',
           'last_name' => "Perez de Armiñan",
-	}
+    }
 );
 
-_post_to_gocardless( $new_pre_auth_url,'pre_authorization' );
-$confirm_resource_data = _get_confirm_resource_data(
-    "$tmp_dir/redirect_flow.json"
-);
+like( $new_pre_auth_url,qr/^https:\/\//,'->new_pre_authorization_url' );
+
 isa_ok(
     my $PreAuthorization = $GoCardless->confirm_resource(
-        %{ $confirm_resource_data }
+        %{ _complete_redirect_flow( type => 'pre_auth',amount => 100,currency => 'GBP' ) }
     ),
     'Business::GoCardless::RedirectFlow'
 );
 
 isa_ok(
-	my $Payment = $GoCardless->create_payment(
-		amount   => 100,
-		currency => 'GBP',
-		links    => { mandate => $PreAuthorization->mandate->id },
-	),
-	'Business::GoCardless::Payment',
-	'->create_payment',
+    my $Payment = $GoCardless->create_payment(
+        amount   => 100,
+        currency => 'GBP',
+        links    => { mandate => $PreAuthorization->mandate->id },
+    ),
+    'Business::GoCardless::Payment',
+    '->create_payment',
 );
 
-note explain $Payment if $DEBUG;
+note explain $Payment->to_hash if $DEBUG;
+
+throws_ok(
+    sub { $Payment->refund },
+    'Business::GoCardless::Exception',
+    '->refund requires an amount',
+);
+
+ok( $Payment->cancel,'->cancel payment' );
 
 ok( $Bill = $PreAuthorization->bill(
-	amount   => 100,
-	currency => 'GBP',
+    amount   => 100,
+    currency => 'GBP',
 ),'PreAuthorization->bill' );
 ok( $Bill->cancel,'->cancel' );
 
 my $Mandate = $PreAuthorization->mandate;
-ok( !$Mandate->active,'mandate is active' );
+ok( !$Mandate->active,'mandate is not active' );
 ok( $Mandate->pending_submission,'mandate is pending_submission' );
-ok( $Mandate->update( metadata => { foo => "bar" } ),'->update mandate' );
+
+isa_ok(
+    $Mandate->update( metadata => { foo => "bar" } ),
+    'Business::GoCardless::Mandate',
+    '->update mandate'
+);
+cmp_deeply( $Mandate->metadata,{ foo => 'bar' },' ... mandate was updated' );
+
 ok( $Mandate->cancel,'->cancel mandate' );
 ok( $Mandate->cancelled,' ... mandate was cancelled' );
 
-my $new_subscription_url = $GoCardless->new_subscription_url(
-	session_token        => 'bar',
-	description          => "Test Subscription",
-    success_redirect_url => "http://localhost:3000/rflow/confirm/subscription"
-		. "/100/GBP/monthly/1/" . strftime( "%Y-12-31",gmtime ),
+# start the subscription next month so the date is always in the future
+my ( undef,undef,undef,undef,$mon,$year ) = gmtime;
+my $start_at = sprintf( "%04d-%02d-15",
+    $mon == 11 ? ( $year + 1901,1 ) : ( $year + 1900,$mon + 2 )
 );
 
-_post_to_gocardless( $new_subscription_url,'subscription' );
-$confirm_resource_data = _get_confirm_resource_data(
-    "$tmp_dir/redirect_flow.json"
+my $new_subscription_url = $GoCardless->new_subscription_url(
+    session_token        => 'baz',
+    description          => "Test Subscription",
+    scheme               => 'bacs',
+    success_redirect_url => "http://localhost:3000/rflow/confirm/subscription"
+        . "/100/GBP/monthly/1/$start_at",
 );
+
+like( $new_subscription_url,qr/^https:\/\//,'->new_subscription_url' );
 
 isa_ok(
     my $Subscription = $GoCardless->confirm_resource(
-        %{ $confirm_resource_data }
+        %{ _complete_redirect_flow(
+            type          => 'subscription',
+            amount        => 100,
+            currency      => 'GBP',
+            interval_unit => 'monthly',
+            interval      => 1,
+            start_at      => $start_at,
+        ) }
     ),
     'Business::GoCardless::Subscription'
 );
 
 isa_ok(
-	$Subscription = $GoCardless->subscription( $Subscription->id ),
-	'Business::GoCardless::Subscription'
+    $Subscription = $GoCardless->subscription( $Subscription->id ),
+    'Business::GoCardless::Subscription'
 );
 
+is( $Subscription->start_date,$start_at,'subscription start_date' );
 ok( $Subscription->cancel,'->cancel' );
+ok( $Subscription->cancelled,' ... subscription was cancelled' );
+
+my $Customer = $GoCardless->customer(
+    $GoCardless->mandate( $Mandate->id )->links->{customer}
+);
+isa_ok( $Customer,'Business::GoCardless::Customer' );
+is( $Customer->family_name,'Jøhñsön','->customer (with wide chars)' );
 
 my @users = $GoCardless->users;
 my $User = $users[0];
@@ -174,74 +230,60 @@ isa_ok( $User,'Business::GoCardless::Customer' );
 
 done_testing();
 
-sub _post_to_gocardless {
-	my ( $url,$desc ) = @_;
+# act as the customer completing the hosted payment pages for the last
+# redirect flow created, returning the params that would be passed to
+# the success_redirect_url (and thus to ->confirm_resource)
+sub _complete_redirect_flow {
+    my ( %params ) = @_;
 
-	note( $url ) if $DEBUG;
+    my $redirect_flow_id   = $LastRedirectFlow->{id};
+    my $billing_request_id = $LastRedirectFlow->{links}{billing_request}
+        || BAIL_OUT( "Redirect flow $redirect_flow_id has no billing request" );
 
-	my $ua  = Mojo::UserAgent->new;
-	$ua->max_redirects( 2 );
-	my $res = $ua->get( $url )->result;
-	ok( $res->is_success,"GET $desc" );
+    note( "Completing $redirect_flow_id via $billing_request_id" ) if $DEBUG;
 
-	if ( $DEBUG ) {
-		open( my $out,'>','before.html' );
-		print $out $res->body;
-		close( $out );
-	}
+    my $Client = $GoCardless->client;
 
-	my $post_url = $res->dom->find('form')->map( attr => 'action' )->first;
+    # sandbox bank details: https://developer.gocardless.com/getting-started/developer-tools/test-bank-details
+    foreach my $action (
+        [ collect_customer_details => {
+            customer => {
+                email       => 'lee@example.com',
+                given_name  => 'Lee',
+                family_name => 'Jøhñsön',
+            },
+            customer_billing_detail => {
+                address_line1 => '1 Test Street',
+                city          => 'London',
+                postal_code   => 'E1 1AA',
+                country_code  => 'GB',
+            },
+        } ],
+        [ collect_bank_account => {
+            account_holder_name => 'Lee Jøhñsön',
+            account_number      => '55779911',
+            branch_code         => '200000',
+            country_code        => 'GB',
+        } ],
+        [ confirm_payer_details => {} ],
+        [ fulfil => {} ],
+    ) {
+        my ( $name,$data ) = @{ $action };
 
-	note( $post_url ) if $DEBUG;
+        my $res = $Client->api_post(
+            "/billing_requests/$billing_request_id/actions/$name",
+            { data => $data },
+        );
 
-	my $account_params = {
-		'customer[email]'               => 'lee@g3s.ch',
-		'customer[given_name]'          => 'Lee',
-		'customer[family_name]'         => 'Jøhñsön',
-		'customer[country_code]'        => 'FR',
-		'customer[bank_accounts][iban]' => 'FR1420041010050500013M02606',
-		'utf8'                          => '✓',
-		'customer[bank_accounts][account_holder_name]' => 'Lee Jøhñsön',
-	};
-
-	note explain $account_params if $DEBUG;
-
-	$post_url = "https://pay-sandbox.gocardless.com$post_url";
-	my $tx = $ua->post( $post_url => form => $account_params );
-	ok( $tx->result,"POST $post_url" );
-
-	if ( $DEBUG ) {
-		open( my $out,'>','after.html' );
-		print $out $tx->res->body;
-		close( $out );
-	}
-
-	if ( ! $tx->result ) {
-		my $err = $tx->error;
-		BAIL_OUT( "$err->{code} response: $err->{message}" ) if $err->{code};
-		BAIL_OUT( "Connection error: $err->{message}" );
-	}
-}
-
-sub _get_confirm_resource_data {
-
-    my ( $file ) = @_;
-
-    while ( 1 ) {
-
-        if ( -e $file ) {
-            sleep( 1 );
-            open( my $fh,'<',$file ) || die "Can't open $file for read: $!";
-            do {
-                local $/;
-                my $content = <$fh>;
-                close( $fh );
-                unlink( $file ) || warn "Couldn't unlink $file: $!";
-                return decode_json( $content )
-            };
-        }
-
-        diag "Waiting for $file to appear...";
-        sleep( 5 );
+        note( "$name: $res->{billing_requests}{status}" ) if $DEBUG;
     }
+
+    pass( "customer completed redirect flow ($params{type})" );
+
+    return {
+        redirect_flow_id => $redirect_flow_id,
+        %params,
+    };
 }
+
+# vim: ts=4:sw=4:et

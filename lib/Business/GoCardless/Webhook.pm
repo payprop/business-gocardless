@@ -134,14 +134,22 @@ sub resources {
 	return @resources;
 }
 
-=head2 is_bill
-
-=head2 is_pre_authorization
-
-=head2 is_subscription
+=pod
 
 Shortcut methods to get the type of data in the webhook, and thus the type of
 objects that will be returned by the call to ->resources
+
+=head2 is_bill
+
+True if the webhook is for bills
+
+=head2 is_pre_authorization
+
+True if the webhook is for pre authorizations
+
+=head2 is_subscription
+
+True if the webhook is for subscriptions
 
 =cut
 

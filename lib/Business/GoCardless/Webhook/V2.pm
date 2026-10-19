@@ -32,6 +32,23 @@ use Business::GoCardless::Webhook::Event;
     signature
     has_legacy_data
 
+The following attributes are only populated when the object comes from the
+webhooks list endpoint (i.e. L<Business::GoCardless::Pro/webhooks>), and contain
+details of the webhook delivery itself:
+
+    id
+    created_at
+    url
+    request_headers
+    response_code
+    response_body
+    response_body_truncated
+    response_headers
+    response_headers_content_truncated
+    response_headers_count_truncated
+    is_test
+    successful
+
 =cut
 
 has [ qw/
@@ -44,6 +61,23 @@ has [ qw/
 / ] => (
     is => 'rw',
 	clearer => 1,
+);
+
+has [ qw/
+    id
+    created_at
+    url
+    request_headers
+    response_code
+    response_body
+    response_body_truncated
+    response_headers
+    response_headers_content_truncated
+    response_headers_count_truncated
+    is_test
+    successful
+/ ] => (
+    is => 'rw',
 );
 
 =head1 Operations on a webhook
@@ -75,7 +109,9 @@ has json => (
 
         # defensive decoding
 		my $params;
-		eval { $params = JSON->new->decode( $json ) };
+		# the json is the raw (UTF-8 encoded) request body, as that is what
+		# the signature is generated from
+		eval { $params = JSON->new->utf8->decode( $json ) };
 		$@ && do {
 			$self->clear_events;
 			$self->clear_signature;

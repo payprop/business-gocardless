@@ -1,5 +1,50 @@
 Revision history for Business-GoCardless
 
+1.00     2026-10-19
+        - Add company_name, phone_number, and danish_identity_number
+          attributes to Business::GoCardless::Customer
+        - Add faster_ach and scheme attributes to Business::GoCardless::Payment
+        - Fix typo in Payment->withdrawn (customer_appoval_denied ->
+          customer_approval_denied)
+        - Add bounced status check to Business::GoCardless::Payout
+        - Add mandate_reference attribute to Business::GoCardless::RedirectFlow
+        - Add count, app_fee, retry_if_possible,
+          earliest_charge_date_after_resume, and parent_plan_paused
+          attributes to Business::GoCardless::Subscription
+        - Add pending_customer_approval, customer_approval_denied, finished,
+          and paused status checks to Business::GoCardless::Subscription
+        - Fix Pro->customer( $id ), which returned an unpopulated object due
+          to using the wrong response key
+        - Fix pagination in the Pro (v2) API: the Paginator now uses the
+          cursors in the response meta data, previously only the first page
+          of results was ever returned
+        - Payment->refund now creates a refund via the /refunds endpoint and
+          returns a new Business::GoCardless::Refund object (it previously
+          always returned 0). The amount to refund must be passed explicitly
+        - Mandate->update now returns the updated Mandate object rather than
+          the raw response data (BREAKING CHANGE if you used the return value)
+        - Webhook::Event->resources now supports refunds and customers events,
+          add is_customer method
+        - Webhook::V2 objects from Pro->webhooks now have the webhook delivery
+          attributes (id, url, response_code, successful, is_test, etc)
+        - Decode API responses as UTF-8, previously strings containing non
+          ASCII characters were returned as UTF-8 encoded bytes rather than
+          characters (BREAKING CHANGE if you were decoding them yourself).
+          Webhook::V2 now also decodes the webhook body as UTF-8
+        - Fix Pro->confirm_resource for redirect flows backed by a billing
+          request (the default for redirect flows now), these are completed
+          by GoCardless when the customer finishes the flow so trying to
+          complete them again caused an error
+        - Fix Pro->confirm_resource passing all of the redirect flow's links
+          when creating the payment / subscription, which is now rejected by
+          the API as only the mandate link is permitted
+        - Update t/004_end_to_end_pro.t to work with the current GoCardless
+          sandbox, it now plays the part of the customer through the billing
+          requests API rather than scraping the (now javascript) payment pages
+        - Remove t/gocardless_callback_reader.pl and t/end_to_end/ as they are
+          no longer needed by the end to end test, and the LWP::Simple and
+          FindBin build requirements that were only used by that test
+
 0.45     2026-06-15
         - Add mandate_type to Business::GoCardless::Mandate, with
           is_bank_debit, is_instant, is_recurring, is_vrp_commercial,

@@ -22,6 +22,7 @@ use Business::GoCardless::Mandate;
 =head1 ATTRIBUTES
 
     confirmation_url
+    mandate_reference
     redirect_url
     scheme
     session_token
@@ -33,6 +34,7 @@ use Business::GoCardless::Mandate;
 
 has [ qw/
     confirmation_url
+    mandate_reference
     redirect_url
     scheme
     session_token

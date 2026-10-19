@@ -19,10 +19,13 @@ extends 'Business::GoCardless::Resource';
 =head1 ATTRIBUTES
 
     amount
+    app_fee
     created_at
+    count
     currency
-    day_of_month
     description
+    day_of_month
+    earliest_charge_date_after_resume
     expires_at
     end_date
     id
@@ -35,7 +38,9 @@ extends 'Business::GoCardless::Resource';
     month
     name
     next_interval_start
+    parent_plan_paused
     payment_reference
+    retry_if_possible
     setup_fee
     start_at
     start_date
@@ -49,10 +54,13 @@ extends 'Business::GoCardless::Resource';
 
 has [ qw/
     amount
+    app_fee
     created_at
+    count
     currency
     description
     day_of_month
+    earliest_charge_date_after_resume
     expires_at
     end_date
     id
@@ -65,7 +73,9 @@ has [ qw/
     month
     name
     next_interval_start
+    parent_plan_paused
     payment_reference
+    retry_if_possible
     setup_fee
     start_at
     start_date
@@ -100,9 +110,13 @@ sub cancel {
 
 =head1 Status checks on a subscription
 
+    pending_customer_approval
+    customer_approval_denied
     inactive
     active
+    finished
     cancelled
+    paused
     expired
 
     if ( $Subscription->active ) {
@@ -111,9 +125,13 @@ sub cancel {
 
 =cut
 
+sub pending_customer_approval { return shift->status eq 'pending_customer_approval' }
+sub customer_approval_denied  { return shift->status eq 'customer_approval_denied' }
 sub inactive  { return shift->status eq 'inactive' }
 sub active    { return shift->status eq 'active' }
+sub finished  { return shift->status eq 'finished' }
 sub cancelled { return shift->status eq 'cancelled' }
+sub paused    { return shift->status eq 'paused' }
 sub expired   { return shift->status eq 'expired' }
 
 =head1 AUTHOR

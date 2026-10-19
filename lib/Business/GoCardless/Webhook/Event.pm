@@ -23,6 +23,9 @@ use Business::GoCardless::Exception;
 use Business::GoCardless::Payment;
 use Business::GoCardless::Subscription;
 use Business::GoCardless::Mandate;
+use Business::GoCardless::Payout;
+use Business::GoCardless::Refund;
+use Business::GoCardless::Customer;
 
 =head1 ATTRIBUTES
 
@@ -80,6 +83,8 @@ sub resources {
 		payouts       => 'payout',
 		subscriptions => 'subscription',
 		mandates      => 'mandate',
+		refunds       => 'refund',
+		customers     => 'customer',
 	};
 
 	my $resource = $mapping->{ $self->resource_type };
@@ -99,18 +104,34 @@ sub resources {
 	);
 }
 
-=head2 is_payment
-
-=head2 is_subscription
-
-=head2 is_payout
-
-=head2 is_mandate
-
-=head2 is_refund
+=pod
 
 Shortcut methods to get the type of data in the event, and thus the type of
 objects that will be returned by the call to ->resources
+
+=head2 is_payment
+
+True if the event is for payments
+
+=head2 is_subscription
+
+True if the event is for subscriptions
+
+=head2 is_payout
+
+True if the event is for payouts
+
+=head2 is_mandate
+
+True if the event is for mandates
+
+=head2 is_refund
+
+True if the event is for refunds
+
+=head2 is_customer
+
+True if the event is for customers
 
 =cut
 
@@ -119,6 +140,7 @@ sub is_subscription { return shift->resource_type eq 'subscriptions' }
 sub is_payout       { return shift->resource_type eq 'payouts' }
 sub is_mandate      { return shift->resource_type eq 'mandates' }
 sub is_refund       { return shift->resource_type eq 'refunds' }
+sub is_customer     { return shift->resource_type eq 'customers' }
 
 # BACK COMPATIBILITY
 sub is_pre_authorization { return shift->is_mandate }

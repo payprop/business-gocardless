@@ -23,6 +23,7 @@ extends 'Business::GoCardless::Resource';
     id
     given_name
     family_name
+    company_name
     address_line1
     address_line2
     address_line3
@@ -31,7 +32,9 @@ extends 'Business::GoCardless::Resource';
     postal_code
     country_code
     language
+    phone_number
     swedish_identity_number
+    danish_identity_number
     metadata
 
 =cut
@@ -42,6 +45,7 @@ has [ qw/
     id
     given_name
     family_name
+    company_name
     address_line1
     address_line2
     address_line3
@@ -50,7 +54,9 @@ has [ qw/
     postal_code
     country_code
     language
+    phone_number
     swedish_identity_number
+    danish_identity_number
     metadata
 / ] => (
     is => 'rw',

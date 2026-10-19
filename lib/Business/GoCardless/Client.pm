@@ -243,6 +243,11 @@ sub _confirm_redirect_flow {
 
     $RedirectFlow->find_with_client( 'redirect_flows' );
 
+    # redirect flows backed by a billing request are completed by gocardless
+    # when the billing request is fulfilled, and trying to complete them again
+    # is an error, so if we already have a mandate there's nothing left to do
+    return $RedirectFlow if ( $RedirectFlow->links // {} )->{mandate};
+
     # now confirm the redirect flow
     my $data = $self->api_post(
         "/redirect_flows/$redirect_flow_id/actions/complete",
@@ -381,7 +386,8 @@ sub _api_request {
     my $res = $ua->request( $req );
 
     if ( $res->is_success ) {
-        my $data  = JSON->new->canonical->decode( my $json = $res->content );
+        # the response body is UTF-8 encoded bytes, as is the request body
+        my $data  = JSON->new->utf8->canonical->decode( my $json = $res->content );
         say STDERR "GOCARDLESS <- $json" if $ENV{GOCARDLESS_DEBUG};
         my $links = $res->header( 'link' );
         my $info  = $res->header( 'x-pagination' );
