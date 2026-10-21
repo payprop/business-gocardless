@@ -10,13 +10,8 @@ set of modules
 # DESCRIPTION
 
 Business::GoCardless is a set of libraries for easy interface to the gocardless
-payment service, they implement most of the functionality currently found
+payment service, they implement all of the functionality currently found
 in the service's API documentation: https://developer.gocardless.com
-
-Current missing functionality is partner account handling, but all resource
-manipulation (Bill, Merchant, Payout etc) is handled along with webhooks and
-the checking/generation of signature, nonce, param normalisation, and other
-such lower level interface with the API.
 
 # Do Not Use This Module Directly
 
