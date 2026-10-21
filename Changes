@@ -96,6 +96,9 @@ Revision history for Business-GoCardless
           API, which passed the filters incorrectly
         - Payer Authorisations are not supported as they are deprecated in
           favour of Billing Requests
+        - Move github repo to payprop org
+          (https://github.com/payprop/business-gocardless)
+        - Update author email address to lee@payprop.com
 
 0.45     2026-06-15
         - Add mandate_type to Business::GoCardless::Mandate, with

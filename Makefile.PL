@@ -8,7 +8,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME             => 'Business::GoCardless',
     VERSION_FROM     => 'lib/Business/GoCardless.pm',
-    AUTHOR           => 'Lee Johnson <leejo@cpan.org>',
+    AUTHOR           => 'Lee Johnson <lee@payprop.com>',
     LICENSE          => 'perl',
     MIN_PERL_VERSION => '5.20.0',
     PREREQ_PM => {
@@ -37,8 +37,8 @@ WriteMakefile(
         resources => {
             license    => 'http://dev.perl.org/licenses/',
             homepage   => 'https://metacpan.org/module/Business::GoCardless',
-            bugtracker => 'https://github.com/Humanstate/business-gocardless/issues',
-            repository => 'https://github.com/Humanstate/business-gocardless'
+            bugtracker => 'https://github.com/payprop/business-gocardless/issues',
+            repository => 'https://github.com/payprop/business-gocardless'
         },
     },
     test => {
