@@ -90,23 +90,50 @@ has [ qw/
 
 =head1 Operations on a subscription
 
-    cancel
+=head2 cancel
 
     $Subscription->cancel
 
-Cancels a subscription.
+Cancels a subscription. With the Pro (v2) API you can optionally pass metadata:
+
+    $Subscription->cancel( metadata => { ... } );
+
+The following operations are only available with the Pro (v2) API:
+
+=head2 update
+
+Update the subscription, returns the updated Subscription object:
+
+    $Subscription->update( amount => 1500,metadata => { ... } );
+
+=head2 pause
+
+Pause the subscription, optionally for a number of cycles:
+
+    $Subscription->pause;
+    $Subscription->pause( pause_cycles => 2,metadata => { ... } );
+
+=head2 resume
+
+Resume a paused subscription:
+
+    $Subscription->resume;
 
 =cut
 
 sub cancel {
-    my ( $self ) = @_;
+    my ( $self,%params ) = @_;
 
     if ( $self->client->api_version > 1 ) {
-        return $self->_operation( undef,'api_post',undef,'actions/cancel' );
+        return $self->_action( 'cancel',%params );
     } else {
         return $self->_operation( 'cancel','api_put' );
     }
 }
+
+sub update { shift->_update( @_ ); }
+sub pause  { shift->_action( 'pause',@_ ); }
+sub resume { shift->_action( 'resume',@_ ); }
 
 =head1 Status checks on a subscription
 

@@ -483,9 +483,12 @@ sub _api_request {
 
                 # the resource has already been created (most likely by an
                 # earlier attempt of this request) so return that resource
-                if ( my $id = $Exception->conflicting_resource_id ) {
-                    ( my $resource_path = $path ) =~ s!/+$!!;
-                    return $self->api_get( "$resource_path/$id" );
+                # the resource is in the collection, which is the first part
+                # of the path (e.g. /instalment_schedules/create_with_dates)
+                my ( $collection ) = $path =~ m!^(/[^/?]+)!;
+
+                if ( my $id = $Exception->conflicting_resource_id and $collection ) {
+                    return $self->api_get( "$collection/$id" );
                 }
 
                 $Exception->throw;

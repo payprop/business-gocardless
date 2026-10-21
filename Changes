@@ -65,6 +65,37 @@ Revision history for Business-GoCardless
           and reasons, has_reason, and conflicting_resource_id methods
         - webhook_secret can now be an arrayref of secrets, allowing for the
           rotation of webhook secrets
+        - Add support for the rest of the Pro (v2) API resources, see the
+          RESOURCE METHODS section of Business::GoCardless::Pro:
+            - Billing Requests, Billing Request Flows, Billing Request
+              Templates, Bank Authorisations, Institutions (Billing Requests
+              replace Redirect Flows for new integrations)
+            - Customer Bank Accounts, Customer Notifications, Bank Account
+              Details, Bank Details Lookups, Events
+            - Creditors, Creditor Bank Accounts, Verification Details
+            - Refunds, Instalment Schedules, Tax Rates
+            - Mandate Imports, Mandate Import Entries, Mandate PDFs,
+              Transferred Mandates
+            - Payout Items, Balances, Funds Availability, Negative Balance
+              Limits, Currency Exchange Rates
+            - Blocks, Logos, Payer Themes, Scheme Identifiers, Exports
+            - Outbound Payments, Outbound Payment Imports, Outbound Payment
+              Import Entries, Bank Account Holder Verifications, Payment
+              Accounts, Payment Account Transactions
+            - Scenario Simulators (sandbox only)
+        - Add the missing operations on existing resources: create, update,
+          and remove customers; list and create mandates, reinstate mandate;
+          create and update subscriptions, pause and resume subscription;
+          update payments, payouts, and refunds; retry webhooks; cancel and
+          retry payments with metadata
+        - All of the create_* methods take an idempotency_key param
+        - Webhook::Event objects now have the metadata, resource_metadata,
+          customer_notifications, and source attributes, and ->resources
+          supports more resource types
+        - Fix Business::GoCardless->payouts( %filters ) with the Pro (v2)
+          API, which passed the filters incorrectly
+        - Payer Authorisations are not supported as they are deprecated in
+          favour of Billing Requests
 
 0.45     2026-06-15
         - Add mandate_type to Business::GoCardless::Mandate, with

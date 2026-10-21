@@ -64,9 +64,21 @@ has [ qw/
 
     retry
     cancel
+    update
     refund
 
     $Payment->retry if $Payment->failed;
+
+retry and cancel optionally take metadata:
+
+    $Payment->cancel( metadata => { ... } );
+
+=head2 update
+
+Update the payment's metadata and/or retry_if_possible, returns the updated
+Payment object:
+
+    $Payment->update( metadata => { ... },retry_if_possible => 1 );
 
 =head2 refund
 
@@ -88,8 +100,9 @@ has since been made) then GoCardless will reject the refund.
 
 =cut
 
-sub retry  { shift->_operation( undef,'api_post',undef,'actions/retry' ); }
-sub cancel { shift->_operation( undef,'api_post',undef,'actions/cancel' ); }
+sub retry  { shift->_action( 'retry',@_ ); }
+sub cancel { shift->_action( 'cancel',@_ ); }
+sub update { shift->_update( @_ ); }
 
 sub refund {
     my ( $self,%params ) = @_;

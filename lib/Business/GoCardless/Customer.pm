@@ -62,6 +62,26 @@ has [ qw/
     is => 'rw',
 );
 
+=head1 Operations on a customer
+
+=head2 update
+
+Update the customer, returns the updated Customer object:
+
+    $Customer->update( email => 'new@example.com',metadata => { ... } );
+
+=head2 remove
+
+Remove the customer, which removes all of their personal data. B<This cannot
+be undone>, and the customer must not have any active mandates:
+
+    $Customer->remove;
+
+=cut
+
+sub update { shift->_update( @_ ); }
+sub remove { shift->_delete; }
+
 # BACK COMPATIBILITY METHODS
 sub first_name { shift->given_name; }
 sub last_name  { shift->family_name; }

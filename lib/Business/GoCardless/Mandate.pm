@@ -65,6 +65,18 @@ has [ qw/
 
     $Mandate->cancel;
 
+    # optionally with metadata
+    $Mandate->cancel( metadata => { ... } );
+
+=head2 reinstate
+
+Reinstate a cancelled or expired mandate:
+
+    $Mandate->reinstate;
+
+    # optionally with metadata
+    $Mandate->reinstate( metadata => { ... } );
+
 =head2 update
 
     $Mandate = $Mandate->update( %params );
@@ -76,12 +88,9 @@ hash as something that looks like:
 
 =cut
 
-sub cancel { shift->_operation( undef,'api_post',undef,'actions/cancel' ); }
-
-sub update {
-    my ( $self,%params ) = @_;
-    return $self->_operation( undef,'api_put',{ mandates => { %params } } );
-}
+sub cancel    { shift->_action( 'cancel',@_ ); }
+sub reinstate { shift->_action( 'reinstate',@_ ); }
+sub update    { shift->_update( @_ ); }
 
 =head1 Status checks on a mandate
 

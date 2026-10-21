@@ -134,7 +134,7 @@ sub payouts {
     my ( $self,%filters ) = @_;
 
     if ( $self->client->api_version > 1 ) {
-        return $self->_list( 'payouts',%filters );
+        return $self->_list( 'payouts',\%filters );
     } else {
         return $self->merchant( $self->client->merchant_id )
             ->payouts( \%filters );

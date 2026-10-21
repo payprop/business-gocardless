@@ -22,6 +22,7 @@ extends 'Business::GoCardless::Webhook';
 with 'Business::GoCardless::Utils';
 
 use JSON ();
+use Encode ();
 use Business::GoCardless::Client;
 use Business::GoCardless::Exception;
 use Business::GoCardless::Webhook::Event;
@@ -176,6 +177,42 @@ See if the webhook is a legacy (Basic API) webhook
 =cut
 
 sub is_legacy { 0 }
+
+=head2 retry
+
+Retry the delivery of a webhook, only for webhooks from the webhooks list
+endpoint (see L<Business::GoCardless::Pro/webhooks>). Returns a new
+Webhook::V2 object for the new delivery:
+
+    my $Retried = $Webhook->retry if ! $Webhook->successful;
+
+=cut
+
+sub retry {
+    my ( $self ) = @_;
+
+    my $data = $self->client->api_post(
+        "/webhooks/@{[ $self->id ]}/actions/retry"
+    );
+
+    return ref( $self )->_new_from_api( $self->client,$data->{webhooks} );
+}
+
+# create an object from the webhooks API, which has the details of the
+# delivery as well as the original request
+sub _new_from_api {
+    my ( $class,$client,$data ) = @_;
+
+    return $class->new(
+        client => $client,
+        %{ $data }, # delivery details: id, url, response_code, etc
+        # the signature is of the raw (UTF-8 encoded) request body
+        json   => Encode::encode_utf8( $data->{request_body} ),
+        # load ordering handled by setting _signature rather than signature
+        # signature will be set in the json trigger
+        _signature => $data->{request_headers}{'Webhook-Signature'},
+    );
+}
 
 =head1 CONFIRMING WEBHOOKS
 

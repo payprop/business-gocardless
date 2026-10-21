@@ -60,6 +60,7 @@ cmp_deeply(
           'description' => 'The payment has been paid out by GoCardless.',
           'origin' => 'gocardless'
         },
+        'metadata' => {},
         'resource_type' => 'payments'
       }, 'Business::GoCardless::Webhook::Event'
     ),

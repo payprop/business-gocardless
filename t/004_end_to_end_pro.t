@@ -271,6 +271,238 @@ my @users = $GoCardless->users;
 my $User = $users[0];
 isa_ok( $User,'Business::GoCardless::Customer' );
 
+note( "Billing Requests" );
+
+# the recommended way to set up a mandate now, rather than redirect flows. as
+# with the redirect flows above we play the part of the customer via the API
+isa_ok(
+    my $BillingRequest = $GoCardless->create_billing_request(
+        mandate_request => { scheme => 'bacs' },
+        metadata        => { test => 'business-gocardless' },
+    ),
+    'Business::GoCardless::BillingRequest',
+    '->create_billing_request'
+);
+ok( $BillingRequest->pending,' ... is pending' );
+
+isa_ok(
+    my $Flow = $BillingRequest->create_flow(
+        redirect_uri => 'https://example.com/complete',
+        exit_uri     => 'https://example.com/exit',
+    ),
+    'Business::GoCardless::BillingRequestFlow',
+    '->create_flow'
+);
+like( $Flow->authorisation_url,qr/^https:\/\//,' ... with authorisation_url' );
+
+ok( $BillingRequest->collect_customer_details(
+    customer => {
+        email       => 'lee@example.com',
+        given_name  => 'Lee',
+        family_name => 'Jøhñsön',
+    },
+    customer_billing_detail => {
+        address_line1 => '1 Test Street',
+        city          => 'London',
+        postal_code   => 'E1 1AA',
+        country_code  => 'GB',
+    },
+),'->collect_customer_details' );
+
+ok( $BillingRequest->collect_bank_account(
+    account_holder_name => 'Lee Jøhñsön',
+    account_number      => '55779911',
+    branch_code         => '200000',
+    country_code        => 'GB',
+),'->collect_bank_account' );
+
+ok( $BillingRequest->confirm_payer_details,'->confirm_payer_details' );
+ok( $BillingRequest->ready_to_fulfil,' ... is ready_to_fulfil' );
+ok( $BillingRequest->fulfil,'->fulfil' );
+ok( $BillingRequest->fulfilled,' ... is fulfilled' );
+
+is(
+    $GoCardless->billing_request( $BillingRequest->id )->status,
+    'fulfilled',
+    '->billing_request'
+);
+ok( scalar( $GoCardless->billing_requests( limit => 1 ) ),'->billing_requests' );
+
+ok( my $mandate_id = $BillingRequest->mandate_id,' ... created a mandate' );
+ok( my $customer_id = $BillingRequest->customer_id,' ... for a customer' );
+
+$Mandate = $GoCardless->mandate( $mandate_id );
+is( $Mandate->scheme,'bacs','->mandate' );
+cmp_deeply(
+    [ map { $_->id } $GoCardless->mandates( customer => $customer_id ) ],
+    [ $mandate_id ],
+    '->mandates'
+);
+
+ok( $GoCardless->run_scenario_simulator( 'mandate_activated',$mandate_id ),'->run_scenario_simulator' );
+ok( $GoCardless->mandate( $mandate_id )->active,' ... mandate is active' );
+
+note( "Instalment Schedules" );
+
+# the month after $start_at, instalment dates must be in ascending order
+my ( $start_year,$start_month ) = $start_at =~ /^(\d{4})-(\d{2})/;
+my $instalment_date = $start_month == 12
+    ? sprintf( "%04d-01-15",$start_year + 1 )
+    : sprintf( "%04d-%02d-15",$start_year,$start_month + 1 );
+
+isa_ok(
+    my $Schedule = $GoCardless->create_instalment_schedule_with_dates(
+        name         => 'Test instalments',
+        currency     => 'GBP',
+        total_amount => 300,
+        instalments  => [
+            { charge_date => $start_at,amount => 100 },
+            { charge_date => $instalment_date,amount => 200 },
+        ],
+        links => { mandate => $mandate_id },
+    ),
+    'Business::GoCardless::InstalmentSchedule',
+    '->create_instalment_schedule_with_dates'
+);
+
+isa_ok(
+    $GoCardless->create_instalment_schedule_with_schedule(
+        name         => 'Test instalments (schedule)',
+        currency     => 'GBP',
+        total_amount => 300,
+        instalments  => {
+            start_date    => $start_at,
+            interval      => 1,
+            interval_unit => 'monthly',
+            amounts       => [ 100,200 ],
+        },
+        links => { mandate => $mandate_id },
+    ),
+    'Business::GoCardless::InstalmentSchedule',
+    '->create_instalment_schedule_with_schedule'
+);
+
+is( $GoCardless->instalment_schedule( $Schedule->id )->id,$Schedule->id,'->instalment_schedule' );
+is( scalar( my @schedules = $GoCardless->instalment_schedules( mandate => $mandate_id ) ),2,'->instalment_schedules' );
+cmp_deeply( $Schedule->update( metadata => { foo => 'bar' } )->metadata,{ foo => 'bar' },'InstalmentSchedule->update' );
+ok( $Schedule->cancel->cancelled,'InstalmentSchedule->cancel' );
+
+note( "Subscriptions and Payments" );
+
+isa_ok(
+    $Subscription = $GoCardless->create_subscription(
+        amount        => 100,
+        currency      => 'GBP',
+        interval_unit => 'monthly',
+        day_of_month  => 15,
+        links         => { mandate => $mandate_id },
+    ),
+    'Business::GoCardless::Subscription',
+    '->create_subscription'
+);
+is( $Subscription->update( name => 'Updated' )->name,'Updated','Subscription->update' );
+ok( $Subscription->pause->paused,'Subscription->pause' );
+ok( $Subscription->resume->active,'Subscription->resume' );
+ok( $Subscription->cancel->cancelled,'Subscription->cancel' );
+
+$Payment = $GoCardless->create_payment(
+    amount   => 100,
+    currency => 'GBP',
+    links    => { mandate => $mandate_id },
+);
+cmp_deeply( $Payment->update( metadata => { foo => 'bar' } )->metadata,{ foo => 'bar' },'Payment->update' );
+ok( $Payment->cancel( metadata => { reason => 'test' } )->cancelled,'Payment->cancel with metadata' );
+
+note( "Customers and Bank Accounts" );
+
+$Customer = $GoCardless->customer( $customer_id );
+is( $Customer->family_name,'Jøhñsön','->customer' );
+cmp_deeply( $Customer->update( metadata => { foo => 'bar' } )->metadata,{ foo => 'bar' },'Customer->update' );
+
+my @bank_accounts = $GoCardless->customer_bank_accounts( customer => $customer_id );
+isa_ok( $bank_accounts[0],'Business::GoCardless::CustomerBankAccount','->customer_bank_accounts' );
+is( $bank_accounts[0]->customer_id,$customer_id,' ... customer_id' );
+is( $GoCardless->customer_bank_account( $bank_accounts[0]->id )->id,$bank_accounts[0]->id,'->customer_bank_account' );
+cmp_deeply(
+    $bank_accounts[0]->update( metadata => { foo => 'bar' } )->metadata,
+    { foo => 'bar' },
+    'CustomerBankAccount->update'
+);
+
+my $Lookup = $GoCardless->create_bank_details_lookup(
+    account_number => '55779911',
+    branch_code    => '200000',
+    country_code   => 'GB',
+);
+isa_ok( $Lookup,'Business::GoCardless::BankDetailsLookup','->create_bank_details_lookup' );
+ok( ( grep { $_ eq 'bacs' } @{ $Lookup->available_debit_schemes } ),' ... available_debit_schemes' );
+
+like(
+    $GoCardless->create_mandate_pdf( links => { mandate => $mandate_id } )->url,
+    qr/^https:\/\//,
+    '->create_mandate_pdf'
+);
+
+ok( $Mandate->cancel->cancelled,'Mandate->cancel' );
+ok( ! $Mandate->reinstate->cancelled,'Mandate->reinstate' );
+
+note( "Creditors, Events, and other resources" );
+
+my @creditors = $GoCardless->creditors;
+isa_ok( $creditors[0],'Business::GoCardless::Creditor','->creditors' );
+my $creditor_id = $creditors[0]->id;
+is( $GoCardless->creditor( $creditor_id )->id,$creditor_id,'->creditor' );
+isa_ok(
+    ( $GoCardless->creditor_bank_accounts( creditor => $creditor_id ) )[0],
+    'Business::GoCardless::CreditorBankAccount',
+    '->creditor_bank_accounts'
+);
+isa_ok(
+    ( $GoCardless->balances( creditor => $creditor_id ) )[0],
+    'Business::GoCardless::Balance',
+    '->balances'
+);
+
+my @events = $GoCardless->events( resource_type => 'billing_requests',limit => 2 );
+isa_ok( $events[0],'Business::GoCardless::Webhook::Event','->events' );
+ok( $events[0]->is_billing_request,' ... is_billing_request' );
+is( $GoCardless->event( $events[0]->id )->id,$events[0]->id,'->event' );
+
+my @tax_rates = $GoCardless->tax_rates( jurisdiction => 'GB' );
+isa_ok( $tax_rates[0],'Business::GoCardless::TaxRate','->tax_rates' );
+is( $GoCardless->tax_rate( $tax_rates[0]->id )->jurisdiction,'GB','->tax_rate' );
+
+isa_ok(
+    ( $GoCardless->currency_exchange_rates( source => 'GBP',limit => 1 ) )[0],
+    'Business::GoCardless::CurrencyExchangeRate',
+    '->currency_exchange_rates'
+);
+isa_ok(
+    ( $GoCardless->institutions( country_code => 'GB',limit => 1 ) )[0],
+    'Business::GoCardless::Institution',
+    '->institutions'
+);
+
+isa_ok(
+    my $Template = $GoCardless->create_billing_request_template(
+        name                     => 'business-gocardless test',
+        mandate_request_currency => 'GBP',
+        mandate_request_scheme   => 'bacs',
+    ),
+    'Business::GoCardless::BillingRequestTemplate',
+    '->create_billing_request_template'
+);
+like( $Template->authorisation_url,qr/^https:\/\//,' ... with authorisation_url' );
+is( $Template->update( name => 'business-gocardless test 2' )->name,'business-gocardless test 2','BillingRequestTemplate->update' );
+is( $GoCardless->billing_request_template( $Template->id )->id,$Template->id,'->billing_request_template' );
+
+throws_ok(
+    sub { $GoCardless->funds_available( $mandate_id,100 ) },
+    'Business::GoCardless::Exception',
+    '->funds_available is only for VRP mandates',
+);
+is( $@->code,422,' ... with code' );
+
 done_testing();
 
 # act as the customer completing the hosted payment pages for the last

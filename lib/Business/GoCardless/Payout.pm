@@ -76,6 +76,18 @@ sub pending     { return shift->status eq 'pending' }
 sub paid        { return shift->status eq 'paid' }
 sub bounced     { return shift->status eq 'bounced' }
 
+=head1 Operations on a payout
+
+=head2 update
+
+Update the payout's metadata (Pro API only), returns the updated Payout object:
+
+    $Payout->update( metadata => { ... } );
+
+=cut
+
+sub update { shift->_update( @_ ); }
+
 =head1 AUTHOR
 
 Lee Johnson - C<leejo@cpan.org>

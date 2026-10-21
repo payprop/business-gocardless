@@ -44,6 +44,18 @@ has [ qw/
     is => 'rw',
 );
 
+=head1 Operations on a refund
+
+=head2 update
+
+Update the refund's metadata, returns the updated Refund object:
+
+    $Refund->update( metadata => { ... } );
+
+=cut
+
+sub update { shift->_update( @_ ); }
+
 =head1 Status checks on a refund
 
     created
