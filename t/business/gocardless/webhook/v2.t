@@ -42,6 +42,9 @@ cmp_deeply(
           'base_url' => 'https://gocardless.com',
           'token' => 'foo',
           'user_agent' => ignore(),
+          'max_retries' => 3,
+          'max_retry_wait' => 60,
+          'raise_on_idempotency_conflict' => 0,
           'webhook_secret' => 'bar'
         }, 'Business::GoCardless::Client' ),
         'created_at' => '2017-09-11T14:05:35.461Z',

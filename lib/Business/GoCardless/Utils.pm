@@ -53,6 +53,14 @@ sub signature_valid {
     # for testing, use live at your own risk
     return 1 if $ENV{GOCARDLESS_SKIP_SIG_CHECK};
 
+    # more than one secret (e.g. when rotating the secret), any can match
+    if ( ref( $app_secret ) eq 'ARRAY' ) {
+        foreach my $secret ( @{ $app_secret } ) {
+            return 1 if $self->signature_valid( $params,$secret,$sig );
+        }
+        return 0;
+    }
+
     if ( $sig ) { # version > 1 (since we don't have access to ->client here)
         return $sig eq hmac_sha256_hex( $params,$app_secret );
     } else {

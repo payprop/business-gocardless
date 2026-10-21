@@ -159,6 +159,49 @@ throws_ok(
 
 ok( $Payment->cancel,'->cancel payment' );
 
+# creating a payment twice with the same idempotency key gives the same payment
+my $idempotency_key = 'business-gocardless-e2e-' . time . "-$$";
+my @idempotent_payments = map {
+    $GoCardless->client->api_post(
+        '/payments',
+        { payments => {
+            amount   => 200,
+            currency => 'GBP',
+            links    => { mandate => $PreAuthorization->mandate->id },
+        } },
+        { 'Idempotency-Key' => $idempotency_key },
+    )->{payments}
+} 1 .. 2;
+
+is(
+    $idempotent_payments[1]{id},
+    $idempotent_payments[0]{id},
+    'idempotency key conflict returns the existing payment'
+);
+
+ok( $GoCardless->payment( $idempotent_payments[0]{id} )->cancel,'->cancel idempotent payment' );
+
+my $rate_limit = $GoCardless->client->rate_limit;
+ok( $rate_limit && $rate_limit->{limit},'->rate_limit populated' );
+ok( defined $rate_limit->{remaining},' ... with remaining' );
+ok( $rate_limit->{reset_at},' ... with reset_at' );
+note explain $rate_limit if $DEBUG;
+
+throws_ok(
+    sub { $GoCardless->create_payment(
+        amount   => 100,
+        currency => 'GBP',
+        links    => { mandate => 'MD000NOTREAL' },
+    ) },
+    'Business::GoCardless::Exception',
+    '->create_payment with unknown mandate throws',
+);
+
+is( $@->code,422,' ... with code' );
+is( $@->type,'invalid_api_usage',' ... with type' );
+ok( $@->request_id,' ... with request_id' );
+ok( $@->has_reason( 'link_not_found' ),' ... with reason' );
+
 ok( $Bill = $PreAuthorization->bill(
     amount   => 100,
     currency => 'GBP',

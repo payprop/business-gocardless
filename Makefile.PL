@@ -20,6 +20,10 @@ WriteMakefile(
         'Digest::SHA'          => 0, # Digest::SHA was first released with perl v5.9.3
         'LWP::UserAgent'       => 6.00,
         'LWP::Protocol::https' => 6.00,
+        'HTTP::Date'           => 0, # required by LWP::UserAgent
+        'Time::HiRes'          => 0, # Time::HiRes was first released with perl v5.7.3
+        'Encode'               => 0, # Encode was first released with perl v5.7.3
+        'UUID'                 => 0.34, # uuid4, and reseeds after fork()
         'JSON'                 => 2.90,
     },
     BUILD_REQUIRES => {

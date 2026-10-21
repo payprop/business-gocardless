@@ -1,6 +1,7 @@
 Revision history for Business-GoCardless
 
 1.00     2026-10-19
+        - MAJOR UPDATE including some breaking changes, see below
         - Add company_name, phone_number, and danish_identity_number
           attributes to Business::GoCardless::Customer
         - Add faster_ach and scheme attributes to Business::GoCardless::Payment
@@ -44,6 +45,26 @@ Revision history for Business-GoCardless
         - Remove t/gocardless_callback_reader.pl and t/end_to_end/ as they are
           no longer needed by the end to end test, and the LWP::Simple and
           FindBin build requirements that were only used by that test
+        - Pro (v2) API requests that create a resource are now sent with an
+          Idempotency-Key header (a UUID v4, or pass your own as a header to
+          the api_post method). If an idempotent_creation_conflict error is
+          returned the existing resource is fetched and returned, unless the
+          new raise_on_idempotency_conflict client attribute is set. Adds a
+          dependency on UUID (0.34+) for generating the keys
+        - Pro (v2) API requests are now retried on network errors, server
+          errors (500, 502, 503, 504), and when rate limited (429), if it is
+          safe to do so. See the new max_retries (default 3) and
+          max_retry_wait (default 60s) client attributes, set max_retries to
+          0 for the previous behaviour
+        - Add rate_limit client attribute, containing the details from the
+          ratelimit-* headers of the most recent response
+        - Add api_delete method to Business::GoCardless::Client, and allow
+          passing extra headers to all of the api_* methods
+        - Business::GoCardless::Exception now has the details of Pro (v2) API
+          errors: type, request_id, documentation_url, and errors attributes,
+          and reasons, has_reason, and conflicting_resource_id methods
+        - webhook_secret can now be an arrayref of secrets, allowing for the
+          rotation of webhook secrets
 
 0.45     2026-06-15
         - Add mandate_type to Business::GoCardless::Mandate, with
