@@ -50,7 +50,8 @@ Checks the signature is valid for the given params hash with the app secret
 A params hash that would flatten to more than
 C<$Business::GoCardless::Utils::max_legacy_params_size> bytes of keys and
 values (default 1 MiB, 0 for no limit) is not valid, as checking it would
-cost time and memory quadratic in its size.
+cost time and memory quadratic in its size. An undef or empty secret never
+validates a signature.
 
 =cut
 
@@ -67,6 +68,9 @@ sub signature_valid {
         }
         return 0;
     }
+
+    # with no key anyone can compute the signature
+    return 0 if ! defined( $app_secret ) || ! length( $app_secret );
 
     if ( $sig ) { # version > 1 (since we don't have access to ->client here)
         return $sig eq hmac_sha256_hex( $params,$app_secret );

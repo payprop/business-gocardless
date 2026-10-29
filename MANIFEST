@@ -110,6 +110,7 @@ t/business/gocardless/taxrate.t
 t/business/gocardless/transferredmandate.t
 t/business/gocardless/user.t
 t/business/gocardless/utils.t
+t/business/gocardless/utils_empty_secret.t
 t/business/gocardless/utils_legacy_size.t
 t/business/gocardless/verificationdetail.t
 t/business/gocardless/webhook.t
